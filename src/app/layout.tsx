@@ -28,7 +28,7 @@ export default function RootLayout({
 }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="flex items-center justify-center bg-gray-950 text-white min-h-screen">
+      <body className="flex items-center justify-center min-h-screen">
         <Providers>{children}</Providers>
       </body>
     </html>

@@ -1,67 +1,174 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 
 interface PassphraseFormProps {
   onVerified: () => void;
 }
 
+const WORD_COUNT = 12;
+
 export function PassphraseForm({ onVerified }: PassphraseFormProps) {
-  const [passphrase, setPassphrase] = useState('');
-  const [error, setError] = useState('');
-  const [isVerifying, setIsVerifying] = useState(false);
+  const [words, setWords] = useState<string[]>(Array(WORD_COUNT).fill(''));
+  const [locked, setLocked] = useState<boolean[]>(Array(WORD_COUNT).fill(false));
+  const [shaking, setShaking] = useState<number | null>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [isChecking, setIsChecking] = useState(false);
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setIsVerifying(true);
+  useEffect(() => {
+    inputRefs.current[activeIndex]?.focus();
+  }, [activeIndex]);
 
+  const verifyWord = useCallback(async (word: string, index: number) => {
+    setIsChecking(true);
     try {
       const res = await fetch('/api/verify-passphrase', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ passphrase }),
+        body: JSON.stringify({ word, index }),
+      });
+      const data = await res.json();
+      return data.valid;
+    } catch {
+      return false;
+    } finally {
+      setIsChecking(false);
+    }
+  }, []);
+
+  const handleSubmitWord = useCallback(async (index: number) => {
+    const word = words[index].trim();
+    if (!word) return;
+
+    const valid = await verifyWord(word, index);
+
+    if (valid) {
+      setLocked((prev) => {
+        const next = [...prev];
+        next[index] = true;
+        return next;
       });
 
-      const data = await res.json();
+      const nextEmpty = locked.findIndex((l, i) => !l && i > index);
+      const nextIndex = nextEmpty >= 0 ? nextEmpty : locked.findIndex((l, i) => !l && i !== index);
 
-      if (data.valid) {
-        onVerified();
-      } else {
-        setError('Wrong passphrase. Look closer at the stairwell 👀');
-        setPassphrase('');
+      if (nextIndex >= 0) {
+        setActiveIndex(nextIndex);
       }
-    } catch {
-      setError('Something went wrong. Try again.');
-    } finally {
-      setIsVerifying(false);
+
+      const allLocked = locked.every((l, i) => l || i === index);
+      if (allLocked) {
+        setTimeout(onVerified, 600);
+      }
+    } else {
+      setShaking(index);
+      setTimeout(() => {
+        setShaking(null);
+        setWords((prev) => {
+          const next = [...prev];
+          next[index] = '';
+          return next;
+        });
+      }, 400);
     }
+  }, [words, locked, verifyWord, onVerified]);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent, index: number) => {
+    if (e.key === ' ' || e.key === 'Enter') {
+      e.preventDefault();
+      handleSubmitWord(index);
+    }
+
+    if (e.key === 'Backspace' && words[index] === '' && index > 0) {
+      e.preventDefault();
+      let prevUnlocked = index - 1;
+      while (prevUnlocked >= 0 && locked[prevUnlocked]) {
+        prevUnlocked--;
+      }
+      if (prevUnlocked >= 0) {
+        setActiveIndex(prevUnlocked);
+      }
+    }
+
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const direction = e.shiftKey ? -1 : 1;
+      let next = index + direction;
+      while (next >= 0 && next < WORD_COUNT && locked[next]) {
+        next += direction;
+      }
+      if (next >= 0 && next < WORD_COUNT) {
+        setActiveIndex(next);
+      }
+    }
+  }, [words, locked, handleSubmitWord]);
+
+  const handleChange = (value: string, index: number) => {
+    if (locked[index]) return;
+    const cleaned = value.replace(/\s/g, '');
+    setWords((prev) => {
+      const next = [...prev];
+      next[index] = cleaned;
+      return next;
+    });
   };
 
+  const lockedCount = locked.filter(Boolean).length;
+  const allLocked = lockedCount === WORD_COUNT;
+
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full max-w-sm">
-      <label htmlFor="passphrase" className="text-sm text-gray-400">
-        Enter the secret phrase from the stairwell
-      </label>
-      <input
-        id="passphrase"
-        type="text"
-        value={passphrase}
-        onChange={(e) => setPassphrase(e.target.value)}
-        placeholder="Type the phrase..."
-        autoComplete="off"
-        className="rounded-xl bg-gray-800 border border-gray-700 px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
-      />
-      {error && (
-        <p className="text-red-400 text-sm">{error}</p>
-      )}
-      <button
-        type="submit"
-        disabled={!passphrase.trim() || isVerifying}
-        className="rounded-xl bg-blue-600 px-6 py-3 text-white font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        {isVerifying ? 'Checking...' : 'Verify'}
-      </button>
-    </form>
+    <div className="flex flex-col items-center gap-4 w-full max-w-sm animate-fade-in-up">
+      <p className="text-xs text-gray-500 tracking-wide uppercase">
+        {lockedCount} / {WORD_COUNT} words decoded
+      </p>
+
+      <div className={`grid grid-cols-4 gap-2 w-full transition-all duration-500 ${allLocked ? 'box-glow-strong rounded-xl' : ''}`}>
+        {Array.from({ length: WORD_COUNT }).map((_, i) => (
+          <div
+            key={`word-${i}`}
+            className={`relative ${shaking === i ? 'animate-shake' : ''} ${locked[i] ? 'animate-word-lock' : ''}`}
+          >
+            <input
+              ref={(el) => { inputRefs.current[i] = el; }}
+              type="text"
+              value={words[i]}
+              onChange={(e) => handleChange(e.target.value, i)}
+              onKeyDown={(e) => handleKeyDown(e, i)}
+              onFocus={() => !locked[i] && setActiveIndex(i)}
+              disabled={locked[i] || isChecking}
+              placeholder={String(i + 1)}
+              autoComplete="off"
+              autoCapitalize="off"
+              spellCheck={false}
+              className={`
+                w-full h-11 rounded-lg text-center text-sm font-mono
+                transition-all duration-300 outline-none
+                ${locked[i]
+                  ? 'bg-stairs-blue/20 border-stairs-blue text-white border cursor-default'
+                  : i === activeIndex
+                    ? 'bg-stairs-dim border-stairs-blue/60 text-white border box-glow'
+                    : 'bg-stairs-dim border-gray-700/50 text-gray-400 border hover:border-gray-600'
+                }
+                ${shaking === i ? 'border-red-500 bg-red-500/10' : ''}
+                placeholder:text-gray-600 placeholder:text-xs
+                disabled:cursor-default
+              `}
+            />
+            {locked[i] && (
+              <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-stairs-blue flex items-center justify-center">
+                <svg width="7" height="6" viewBox="0 0 7 6" fill="none">
+                  <path d="M1 3L2.5 4.5L6 1" stroke="white" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <p className="text-xs text-gray-600">
+        Type each word and press space to verify
+      </p>
+    </div>
   );
 }

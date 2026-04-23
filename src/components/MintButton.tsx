@@ -43,8 +43,20 @@ export function MintButton({ onSuccess }: MintButtonProps) {
 
   if (alreadyMinted) {
     return (
-      <div className="text-center">
-        <p className="text-green-400 font-semibold">You already minted your Welcome Pass! 🎉</p>
+      <div className="flex flex-col items-center gap-3 animate-fade-in-up">
+        <div className="w-full rounded-xl bg-stairs-dim border border-green-500/30 p-4 box-glow-green">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0">
+              <svg width="14" height="11" viewBox="0 0 14 11" fill="none">
+                <path d="M1 5L5 9L13 1" stroke="#22C55E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-white font-semibold text-sm">Already claimed</p>
+              <p className="text-gray-400 text-xs">Your Welcome Pass is in your wallet</p>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -82,18 +94,35 @@ export function MintButton({ onSuccess }: MintButtonProps) {
   const isConfirming = txId && callsStatus?.status === 'pending';
 
   return (
-    <div className="flex flex-col items-center gap-4 w-full max-w-sm">
+    <div className="flex flex-col items-center gap-4 w-full max-w-sm animate-fade-in-up">
       <button
         onClick={handleMint}
         disabled={isPending || !!isConfirming}
-        className="w-full rounded-xl bg-green-600 px-6 py-3 text-white font-semibold hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        className="
+          w-full rounded-xl px-6 py-4 font-semibold text-white
+          bg-gradient-to-r from-stairs-blue to-blue-600
+          hover:from-blue-600 hover:to-stairs-blue
+          transition-all duration-300
+          disabled:opacity-40 disabled:cursor-not-allowed
+          hover:scale-[1.02] active:scale-[0.98]
+          box-glow
+        "
       >
-        {isPending
-          ? 'Confirm in Wallet...'
-          : isConfirming
-            ? 'Minting...'
-            : 'Mint Welcome Pass 🎫'}
+        {isPending ? (
+          <span className="flex items-center justify-center gap-2">
+            <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+            Confirm in Wallet...
+          </span>
+        ) : isConfirming ? (
+          <span className="flex items-center justify-center gap-2">
+            <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+            Minting...
+          </span>
+        ) : (
+          'Mint Welcome Pass'
+        )}
       </button>
+
       {sendError && (
         <p className="text-red-400 text-sm text-center">
           {sendError.message.includes('User rejected')
@@ -101,9 +130,10 @@ export function MintButton({ onSuccess }: MintButtonProps) {
             : 'Mint failed. Try again.'}
         </p>
       )}
+
       {isConfirming && (
-        <p className="text-gray-400 text-sm animate-pulse">
-          Waiting for confirmation...
+        <p className="text-gray-500 text-xs animate-pulse">
+          Waiting for confirmation on Base Sepolia...
         </p>
       )}
     </div>
