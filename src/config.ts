@@ -3,9 +3,8 @@ export const NEXT_PUBLIC_URL =
     ? 'http://localhost:3000'
     : 'https://secret-stairs.vercel.app';
 
-// CDP Paymaster proxy URL — in production, proxy this through your backend
-export const PAYMASTER_SERVICE_URL =
-  process.env.NEXT_PUBLIC_PAYMASTER_URL ?? '';
+// CDP Paymaster proxy URL — proxied through /api/paymaster to keep the real URL server-side
+export const PAYMASTER_SERVICE_URL = '/api/paymaster';
 
 // Contract address for WelcomeNFT on Base Sepolia
 export const WELCOME_NFT_ADDRESS =
