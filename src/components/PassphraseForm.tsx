@@ -104,6 +104,54 @@ export function PassphraseForm({ onVerified }: PassphraseFormProps) {
     }
   }, [words, locked, handleSubmitWord]);
 
+  const handlePaste = useCallback(async (e: React.ClipboardEvent, index: number) => {
+    const pasted = e.clipboardData.getData('text').trim();
+    const pastedWords = pasted.split(/\s+/).filter(Boolean);
+
+    if (pastedWords.length <= 1) return;
+
+    e.preventDefault();
+
+    const newWords = [...words];
+    const newLocked = [...locked];
+    let slot = index;
+
+    for (const pw of pastedWords) {
+      while (slot < WORD_COUNT && newLocked[slot]) slot++;
+      if (slot >= WORD_COUNT) break;
+      newWords[slot] = pw;
+      slot++;
+    }
+
+    setWords(newWords);
+
+    for (let i = index; i < WORD_COUNT; i++) {
+      if (newLocked[i] || !newWords[i]) continue;
+
+      const valid = await verifyWord(newWords[i], i);
+      if (valid) {
+        newLocked[i] = true;
+        setLocked([...newLocked]);
+      } else {
+        setShaking(i);
+        newWords[i] = '';
+        setWords([...newWords]);
+        await new Promise((r) => setTimeout(r, 400));
+        setShaking(null);
+      }
+    }
+
+    setLocked([...newLocked]);
+
+    if (newLocked.every(Boolean)) {
+      setTimeout(onVerified, 600);
+      return;
+    }
+
+    const nextEmpty = newLocked.findIndex((l) => !l);
+    if (nextEmpty >= 0) setActiveIndex(nextEmpty);
+  }, [words, locked, verifyWord, onVerified]);
+
   const handleChange = (value: string, index: number) => {
     if (locked[index]) return;
     const cleaned = value.replace(/\s/g, '');
@@ -135,6 +183,7 @@ export function PassphraseForm({ onVerified }: PassphraseFormProps) {
               value={words[i]}
               onChange={(e) => handleChange(e.target.value, i)}
               onKeyDown={(e) => handleKeyDown(e, i)}
+              onPaste={(e) => handlePaste(e, i)}
               onFocus={() => !locked[i] && setActiveIndex(i)}
               disabled={locked[i] || isChecking}
               placeholder={String(i + 1)}
@@ -167,7 +216,7 @@ export function PassphraseForm({ onVerified }: PassphraseFormProps) {
       </div>
 
       <p className="text-xs text-gray-600">
-        Type each word and press space to verify
+        Type each word and press space, or paste all 12 at once
       </p>
     </div>
   );
