@@ -76,7 +76,13 @@ export function MintButton({ onSuccess }: MintButtonProps) {
         args: [address],
       });
 
+      // Coinbase Smart Wallet's wallet_sendCalls handler validates the `from`
+      // field strictly. @wagmi/core's sendCalls does NOT auto-fill it from
+      // the active connector (unlike the React useSendCalls hook), so passing
+      // `account` explicitly is required. Without it, the wallet popup shows
+      // "Invalid request: Must be a valid address".
       const result = await wagmiSendCalls(config, {
+        account: address,
         calls: [
           {
             to: WELCOME_NFT_ADDRESS,
