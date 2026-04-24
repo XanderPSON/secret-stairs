@@ -15,6 +15,8 @@ export function PassphraseForm({ onVerified }: PassphraseFormProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isChecking, setIsChecking] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const wordsRef = useRef(words);
+  wordsRef.current = words;
 
   useEffect(() => {
     inputRefs.current[activeIndex]?.focus();
@@ -38,7 +40,7 @@ export function PassphraseForm({ onVerified }: PassphraseFormProps) {
   }, []);
 
   const handleSubmitWord = useCallback(async (index: number) => {
-    const word = words[index].trim();
+    const word = wordsRef.current[index].trim();
     if (!word) return;
 
     const valid = await verifyWord(word, index);
@@ -72,7 +74,7 @@ export function PassphraseForm({ onVerified }: PassphraseFormProps) {
         });
       }, 400);
     }
-  }, [words, locked, verifyWord, onVerified]);
+  }, [locked, verifyWord, onVerified]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent, index: number) => {
     if (e.key === ' ' || e.key === 'Enter') {
@@ -93,14 +95,7 @@ export function PassphraseForm({ onVerified }: PassphraseFormProps) {
 
     if (e.key === 'Tab') {
       e.preventDefault();
-      const direction = e.shiftKey ? -1 : 1;
-      let next = index + direction;
-      while (next >= 0 && next < WORD_COUNT && locked[next]) {
-        next += direction;
-      }
-      if (next >= 0 && next < WORD_COUNT) {
-        setActiveIndex(next);
-      }
+      handleSubmitWord(index);
     }
   }, [words, locked, handleSubmitWord]);
 
@@ -152,6 +147,10 @@ export function PassphraseForm({ onVerified }: PassphraseFormProps) {
     if (nextEmpty >= 0) setActiveIndex(nextEmpty);
   }, [words, locked, verifyWord, onVerified]);
 
+  const debounceTimers = useRef<(ReturnType<typeof setTimeout> | null)[]>(
+    Array(WORD_COUNT).fill(null)
+  );
+
   const handleChange = (value: string, index: number) => {
     if (locked[index]) return;
     const cleaned = value.replace(/\s/g, '');
@@ -160,6 +159,16 @@ export function PassphraseForm({ onVerified }: PassphraseFormProps) {
       next[index] = cleaned;
       return next;
     });
+
+    if (debounceTimers.current[index]) {
+      clearTimeout(debounceTimers.current[index]!);
+    }
+
+    if (cleaned.length >= 2) {
+      debounceTimers.current[index] = setTimeout(() => {
+        handleSubmitWord(index);
+      }, 400);
+    }
   };
 
   const lockedCount = locked.filter(Boolean).length;
@@ -216,7 +225,7 @@ export function PassphraseForm({ onVerified }: PassphraseFormProps) {
       </div>
 
       <p className="text-xs text-gray-600">
-        Type each word and press space, or paste all 12 at once
+        Type each word to unlock, or paste all 12 at once
       </p>
     </div>
   );
