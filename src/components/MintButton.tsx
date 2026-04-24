@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import {
-  useSendCalls,
   useCallsStatus,
   useAccount,
   useReadContract,
 } from 'wagmi';
 import { encodeFunctionData } from 'viem';
 import { baseSepolia } from 'wagmi/chains';
+import { useConfig } from 'wagmi';
+import { sendCalls as wagmiSendCalls } from '@wagmi/core';
 import { welcomeNftAbi } from '../constants';
 import { WELCOME_NFT_ADDRESS, PAYMASTER_SERVICE_URL } from '../config';
 
@@ -18,7 +19,10 @@ interface MintButtonProps {
 
 export function MintButton({ onSuccess }: MintButtonProps) {
   const { address } = useAccount();
+  const config = useConfig();
   const [txId, setTxId] = useState<string>();
+  const [isPending, setIsPending] = useState(false);
+  const [sendError, setSendError] = useState<Error | null>(null);
 
   const { data: alreadyMinted } = useReadContract({
     address: WELCOME_NFT_ADDRESS,
@@ -27,8 +31,6 @@ export function MintButton({ onSuccess }: MintButtonProps) {
     args: address ? [address] : undefined,
     chainId: baseSepolia.id,
   });
-
-  const { sendCalls, isPending, error: sendError } = useSendCalls();
 
   const { data: callsStatus } = useCallsStatus({
     id: txId as string,
@@ -61,22 +63,25 @@ export function MintButton({ onSuccess }: MintButtonProps) {
     );
   }
 
-  const handleMint = () => {
+  const handleMint = async () => {
     if (!address) return;
 
-    const mintData = encodeFunctionData({
-      abi: welcomeNftAbi,
-      functionName: 'mint',
-      args: [address],
-    });
+    setIsPending(true);
+    setSendError(null);
 
-    sendCalls(
-      {
+    try {
+      const mintData = encodeFunctionData({
+        abi: welcomeNftAbi,
+        functionName: 'mint',
+        args: [address],
+      });
+
+      const result = await wagmiSendCalls(config, {
         calls: [
           {
             to: WELCOME_NFT_ADDRESS,
             data: mintData,
-            value: 0n,
+            value: BigInt(0),
           },
         ],
         capabilities: {
@@ -84,11 +89,16 @@ export function MintButton({ onSuccess }: MintButtonProps) {
             url: PAYMASTER_SERVICE_URL,
           },
         },
-      },
-      {
-        onSuccess: (data) => setTxId(data.id),
-      },
-    );
+        chainId: baseSepolia.id,
+      });
+
+      setTxId(result.id);
+    } catch (err) {
+      console.error('[MintButton] sendCalls error:', err);
+      setSendError(err instanceof Error ? err : new Error(String(err)));
+    } finally {
+      setIsPending(false);
+    }
   };
 
   const isConfirming = txId && callsStatus?.status === 'pending';
@@ -124,11 +134,18 @@ export function MintButton({ onSuccess }: MintButtonProps) {
       </button>
 
       {sendError && (
-        <p className="text-red-400 text-sm text-center">
-          {sendError.message.includes('User rejected')
-            ? 'Transaction cancelled.'
-            : 'Mint failed. Try again.'}
-        </p>
+        <div className="text-center">
+          <p className="text-red-400 text-sm">
+            {sendError.message.includes('User rejected')
+              ? 'Transaction cancelled.'
+              : 'Mint failed. Try again.'}
+          </p>
+          {process.env.NODE_ENV === 'development' && (
+            <p className="text-red-400/60 text-xs mt-1 break-all">
+              {sendError.message}
+            </p>
+          )}
+        </div>
       )}
 
       {isConfirming && (
