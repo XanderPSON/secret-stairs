@@ -3,10 +3,9 @@ export const NEXT_PUBLIC_URL =
     ? 'http://localhost:3000'
     : 'https://secret-stairs.vercel.app';
 
-// CDP Paymaster proxy URL — must be absolute so the Smart Wallet popup can reach it
-export const PAYMASTER_SERVICE_URL = `${NEXT_PUBLIC_URL}/api/paymaster`;
+export const PAYMASTER_SERVICE_URL =
+  process.env.NEXT_PUBLIC_PAYMASTER_URL ?? '';
 
-// Contract address for WelcomeNFT on Base Sepolia
 export const WELCOME_NFT_ADDRESS =
   (process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as `0x${string}`) ??
   '0x0000000000000000000000000000000000000000';
