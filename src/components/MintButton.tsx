@@ -6,10 +6,9 @@ import {
   useAccount,
   useReadContract,
 } from 'wagmi';
-import { encodeFunctionData } from 'viem';
+import { encodeFunctionData, numberToHex } from 'viem';
 import { baseSepolia } from 'wagmi/chains';
-import { useConfig } from 'wagmi';
-import { sendCalls as wagmiSendCalls } from '@wagmi/core';
+import { useConnectorClient } from 'wagmi';
 import { welcomeNftAbi } from '../constants';
 import { WELCOME_NFT_ADDRESS, PAYMASTER_SERVICE_URL } from '../config';
 
@@ -19,7 +18,7 @@ interface MintButtonProps {
 
 export function MintButton({ onSuccess }: MintButtonProps) {
   const { address } = useAccount();
-  const config = useConfig();
+  const { data: connectorClient } = useConnectorClient({ chainId: baseSepolia.id });
   const [txId, setTxId] = useState<string>();
   const [isPending, setIsPending] = useState(false);
   const [sendError, setSendError] = useState<Error | null>(null);
@@ -64,7 +63,10 @@ export function MintButton({ onSuccess }: MintButtonProps) {
   }
 
   const handleMint = async () => {
-    if (!address) return;
+    if (!address || !connectorClient) {
+      console.error('[MintButton] Missing prerequisites', { address, hasClient: !!connectorClient });
+      return;
+    }
 
     setIsPending(true);
     setSendError(null);
@@ -76,29 +78,42 @@ export function MintButton({ onSuccess }: MintButtonProps) {
         args: [address],
       });
 
-      // Coinbase Smart Wallet's wallet_sendCalls handler validates the `from`
-      // field strictly. @wagmi/core's sendCalls does NOT auto-fill it from
-      // the active connector (unlike the React useSendCalls hook), so passing
-      // `account` explicitly is required. Without it, the wallet popup shows
-      // "Invalid request: Must be a valid address".
-      const result = await wagmiSendCalls(config, {
-        account: address,
-        calls: [
-          {
-            to: WELCOME_NFT_ADDRESS,
-            data: mintData,
-            value: BigInt(0),
-          },
-        ],
-        capabilities: {
-          paymasterService: {
-            url: PAYMASTER_SERVICE_URL,
+      // Build the EIP-5792 wallet_sendCalls payload by hand and send it
+      // directly through the connector's EIP-1193 provider, bypassing wagmi
+      // and viem entirely. This isolates payload-construction bugs (which
+      // exact field is causing keys.coinbase.com's "Must be a valid address"
+      // rejection) and lets us inspect every byte that goes on the wire.
+      const params = [
+        {
+          version: '1.0',
+          chainId: numberToHex(baseSepolia.id),
+          from: address,
+          calls: [
+            {
+              to: WELCOME_NFT_ADDRESS,
+              data: mintData,
+              value: '0x0',
+            },
+          ],
+          capabilities: {
+            paymasterService: {
+              url: PAYMASTER_SERVICE_URL,
+            },
           },
         },
-        chainId: baseSepolia.id,
-      });
+      ];
 
-      setTxId(result.id);
+      console.log('[MintButton] wallet_sendCalls params:', JSON.stringify(params, null, 2));
+
+      const result = (await connectorClient.request({
+        method: 'wallet_sendCalls',
+        params,
+      } as never)) as { id: string } | string;
+
+      console.log('[MintButton] wallet_sendCalls result:', result);
+
+      const id = typeof result === 'string' ? result : result.id;
+      setTxId(id);
     } catch (err) {
       console.error('[MintButton] sendCalls error:', err);
       setSendError(err instanceof Error ? err : new Error(String(err)));
