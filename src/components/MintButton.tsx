@@ -23,12 +23,18 @@ export function MintButton({ onSuccess }: MintButtonProps) {
   const [isPending, setIsPending] = useState(false);
   const [sendError, setSendError] = useState<Error | null>(null);
 
-  const { data: alreadyMinted } = useReadContract({
+  const {
+    data: alreadyMinted,
+    isLoading: isCheckingMinted,
+    error: hasMintedError,
+    refetch: refetchHasMinted,
+  } = useReadContract({
     address: WELCOME_NFT_ADDRESS,
     abi: welcomeNftAbi,
     functionName: 'hasMinted',
     args: address ? [address] : undefined,
     chainId: baseSepolia.id,
+    query: { enabled: !!address },
   });
 
   const { data: callsStatus } = useCallsStatus({
@@ -42,6 +48,34 @@ export function MintButton({ onSuccess }: MintButtonProps) {
     }
   }, [callsStatus?.status, onSuccess]);
 
+  if (isCheckingMinted) {
+    return (
+      <div className="flex items-center justify-center py-8 animate-fade-in-up">
+        <div className="w-5 h-5 border-2 border-stairs-blue border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (hasMintedError) {
+    return (
+      <div className="flex flex-col items-center gap-3 animate-fade-in-up text-center">
+        <p className="text-red-400 text-sm">
+          Couldn&apos;t check mint status on Base Sepolia.
+        </p>
+        <p className="text-gray-500 text-xs break-all">
+          {hasMintedError.message}
+        </p>
+        <button
+          type="button"
+          onClick={() => refetchHasMinted()}
+          className="text-stairs-blue text-xs underline hover:text-blue-300"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
   if (alreadyMinted) {
     return (
       <div className="flex flex-col items-center gap-3 animate-fade-in-up">
@@ -54,7 +88,9 @@ export function MintButton({ onSuccess }: MintButtonProps) {
             </div>
             <div>
               <p className="text-white font-semibold text-sm">Already claimed</p>
-              <p className="text-gray-400 text-xs">Your Welcome Pass is in your wallet</p>
+              <p className="text-gray-400 text-xs font-mono break-all mt-1">
+                {address}
+              </p>
             </div>
           </div>
         </div>
@@ -155,17 +191,15 @@ export function MintButton({ onSuccess }: MintButtonProps) {
       </button>
 
       {sendError && (
-        <div className="text-center">
+        <div className="text-center w-full">
           <p className="text-red-400 text-sm">
             {sendError.message.includes('User rejected')
               ? 'Transaction cancelled.'
-              : 'Mint failed. Try again.'}
+              : 'Mint failed.'}
           </p>
-          {process.env.NODE_ENV === 'development' && (
-            <p className="text-red-400/60 text-xs mt-1 break-all">
-              {sendError.message}
-            </p>
-          )}
+          <p className="text-red-400/60 text-xs mt-1 break-all">
+            {sendError.message}
+          </p>
         </div>
       )}
 

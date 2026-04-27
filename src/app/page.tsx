@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useAccount } from 'wagmi';
+import { useAccount, useDisconnect } from 'wagmi';
 import { ConnectWallet } from '../components/ConnectWallet';
 import { PassphraseForm } from '../components/PassphraseForm';
 import { MintButton } from '../components/MintButton';
@@ -16,13 +16,35 @@ const STEP_SUBTITLES: Record<Step, string> = {
 };
 
 export default function Page() {
-  const { isConnected } = useAccount();
+  const { isConnected, address } = useAccount();
+  const { disconnect } = useDisconnect();
   const [step, setStep] = useState<Step>('connect');
 
   const currentStep = !isConnected ? 'connect' : step === 'connect' ? 'passphrase' : step;
 
+  const handleDisconnect = () => {
+    disconnect();
+    setStep('connect');
+  };
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center px-4 py-12 animate-fade-in">
+      {isConnected && address && (
+        <div className="fixed top-4 right-4 z-10 flex items-center gap-3 rounded-full bg-stairs-dim border border-gray-800 px-4 py-2 animate-fade-in">
+          <div className="w-2 h-2 rounded-full bg-stairs-blue animate-dot-pulse" />
+          <span className="font-mono text-sm text-gray-300">
+            {address.slice(0, 6)}…{address.slice(-4)}
+          </span>
+          <button
+            type="button"
+            onClick={handleDisconnect}
+            className="text-xs text-gray-500 hover:text-gray-300 transition-colors ml-1"
+          >
+            Disconnect
+          </button>
+        </div>
+      )}
+
       <div className="flex w-full max-w-md flex-col items-center gap-8">
         <div className="text-center">
           <div className="mb-3">
