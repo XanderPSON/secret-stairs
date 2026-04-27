@@ -7,27 +7,37 @@ import {
   useReadContract,
   useConnectorClient,
   useSwitchChain,
+  useWaitForTransactionReceipt,
 } from 'wagmi';
+import { writeContract } from '@wagmi/core';
+import { useConfig } from 'wagmi';
 import { encodeFunctionData, numberToHex } from 'viem';
 import { baseSepolia } from 'wagmi/chains';
 import { welcomeNftAbi } from '../constants';
 import { WELCOME_NFT_ADDRESS, PAYMASTER_SERVICE_URL } from '../config';
+
+function isSmartWalletConnector(id: string | undefined, type: string | undefined): boolean {
+  return id === 'coinbaseWalletSDK' || type === 'coinbaseWallet';
+}
 
 interface MintButtonProps {
   onSuccess: () => void;
 }
 
 export function MintButton({ onSuccess }: MintButtonProps) {
-  const { address, chainId: connectedChainId } = useAccount();
+  const { address, chainId: connectedChainId, connector } = useAccount();
+  const config = useConfig();
   const { data: connectorClient, error: clientError } = useConnectorClient({
     chainId: baseSepolia.id,
   });
   const { switchChainAsync, isPending: isSwitchingChain } = useSwitchChain();
   const [txId, setTxId] = useState<string>();
+  const [txHash, setTxHash] = useState<`0x${string}`>();
   const [isPending, setIsPending] = useState(false);
   const [sendError, setSendError] = useState<Error | null>(null);
 
   const isWrongChain = connectedChainId !== undefined && connectedChainId !== baseSepolia.id;
+  const isSmartWallet = isSmartWalletConnector(connector?.id, connector?.type);
 
   const {
     data: alreadyMinted,
@@ -48,11 +58,17 @@ export function MintButton({ onSuccess }: MintButtonProps) {
     query: { enabled: !!txId, refetchInterval: 1000 },
   });
 
+  const { data: txReceipt } = useWaitForTransactionReceipt({
+    hash: txHash,
+    chainId: baseSepolia.id,
+    query: { enabled: !!txHash },
+  });
+
   useEffect(() => {
-    if (callsStatus?.status === 'success') {
+    if (callsStatus?.status === 'success' || txReceipt?.status === 'success') {
       onSuccess();
     }
-  }, [callsStatus?.status, onSuccess]);
+  }, [callsStatus?.status, txReceipt?.status, onSuccess]);
 
   if (isWrongChain) {
     return (
@@ -134,80 +150,83 @@ export function MintButton({ onSuccess }: MintButtonProps) {
   }
 
   const handleMint = async () => {
-    if (!address || !connectorClient) {
-      const reason = clientError
-        ? `Wallet client unavailable: ${clientError.message}`
-        : 'Wallet client not ready. Try refreshing or reconnecting.';
-      console.error('[MintButton] Missing prerequisites', {
-        address,
-        hasClient: !!connectorClient,
-        clientError,
-      });
-      setSendError(new Error(reason));
-      return;
-    }
+    if (!address) return;
 
     setIsPending(true);
     setSendError(null);
 
     try {
-      const mintData = encodeFunctionData({
-        abi: welcomeNftAbi,
-        functionName: 'mint',
-        args: [address],
-      });
+      if (isSmartWallet) {
+        if (!connectorClient) {
+          const reason = clientError
+            ? `Wallet client unavailable: ${clientError.message}`
+            : 'Wallet client not ready. Try refreshing or reconnecting.';
+          throw new Error(reason);
+        }
 
-      // Build the EIP-5792 wallet_sendCalls payload by hand and send it
-      // directly through the connector's EIP-1193 provider, bypassing wagmi
-      // and viem entirely. This isolates payload-construction bugs (which
-      // exact field is causing keys.coinbase.com's "Must be a valid address"
-      // rejection) and lets us inspect every byte that goes on the wire.
-      const params = [
-        {
-          version: '1.0',
-          chainId: numberToHex(baseSepolia.id),
-          from: address,
-          calls: [
-            {
-              to: WELCOME_NFT_ADDRESS,
-              data: mintData,
-              value: '0x0',
-            },
-          ],
-          capabilities: {
-            paymasterService: {
-              url: PAYMASTER_SERVICE_URL,
+        const mintData = encodeFunctionData({
+          abi: welcomeNftAbi,
+          functionName: 'mint',
+          args: [address],
+        });
+
+        const params = [
+          {
+            version: '1.0',
+            chainId: numberToHex(baseSepolia.id),
+            from: address,
+            calls: [
+              {
+                to: WELCOME_NFT_ADDRESS,
+                data: mintData,
+                value: '0x0',
+              },
+            ],
+            capabilities: {
+              paymasterService: { url: PAYMASTER_SERVICE_URL },
             },
           },
-        },
-      ];
+        ];
 
-      console.log('[MintButton] wallet_sendCalls params:', JSON.stringify(params, null, 2));
+        const result = (await connectorClient.request({
+          method: 'wallet_sendCalls',
+          params,
+        } as never)) as { id: string } | string;
 
-      const result = (await connectorClient.request({
-        method: 'wallet_sendCalls',
-        params,
-      } as never)) as { id: string } | string;
-
-      console.log('[MintButton] wallet_sendCalls result:', result);
-
-      const id = typeof result === 'string' ? result : result.id;
-      setTxId(id);
+        setTxId(typeof result === 'string' ? result : result.id);
+      } else {
+        const hash = await writeContract(config, {
+          address: WELCOME_NFT_ADDRESS,
+          abi: welcomeNftAbi,
+          functionName: 'mint',
+          args: [address],
+          chainId: baseSepolia.id,
+          account: address,
+        });
+        setTxHash(hash);
+      }
     } catch (err) {
-      console.error('[MintButton] sendCalls error:', err);
+      console.error('[MintButton] mint error:', err);
       setSendError(err instanceof Error ? err : new Error(String(err)));
     } finally {
       setIsPending(false);
     }
   };
 
-  const isConfirming = txId && callsStatus?.status === 'pending';
+  const isConfirming =
+    (!!txId && callsStatus?.status === 'pending') ||
+    (!!txHash && txReceipt?.status !== 'success');
 
   return (
     <div className="flex flex-col items-center gap-4 w-full max-w-sm animate-fade-in-up">
+      {!isSmartWallet && (
+        <p className="text-yellow-400/80 text-xs text-center">
+          Heads up: this wallet pays its own gas. Connect a Smart Wallet for a sponsored mint.
+        </p>
+      )}
       <button
         onClick={handleMint}
-        disabled={isPending || !!isConfirming}
+        disabled={isPending || isConfirming}
         className="
           w-full rounded-xl px-6 py-4 font-semibold text-white
           bg-gradient-to-r from-stairs-blue to-blue-600

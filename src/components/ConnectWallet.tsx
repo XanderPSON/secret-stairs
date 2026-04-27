@@ -1,6 +1,17 @@
 'use client';
 
+import type { Connector } from 'wagmi';
 import { useAccount, useConnect, useDisconnect } from 'wagmi';
+
+function getConnectorLabel(connector: Connector): string {
+  if (connector.id === 'coinbaseWalletSDK' || connector.type === 'coinbaseWallet') {
+    return 'Connect Smart Wallet';
+  }
+  if (connector.id === 'injected' || connector.type === 'injected') {
+    return 'Connect Wallet';
+  }
+  return `Connect ${connector.name}`;
+}
 
 export function ConnectWallet() {
   const { address, isConnected, isConnecting, isReconnecting } = useAccount();
@@ -39,7 +50,7 @@ export function ConnectWallet() {
                 Connecting...
               </span>
             ) : (
-              `Connect ${connector.name}`
+              getConnectorLabel(connector)
             )}
           </button>
         ))}
