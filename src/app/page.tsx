@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAccount, useDisconnect } from 'wagmi';
 import { ConnectWallet } from '../components/ConnectWallet';
 import { PassphraseForm } from '../components/PassphraseForm';
@@ -19,6 +19,12 @@ export default function Page() {
   const { isConnected, address } = useAccount();
   const { disconnect } = useDisconnect();
   const [step, setStep] = useState<Step>('connect');
+
+  // Reset flow when the connected wallet address changes (covers connect,
+  // disconnect, and wallet-swap without a page refresh).
+  useEffect(() => {
+    setStep('connect');
+  }, [address]);
 
   const currentStep = !isConnected ? 'connect' : step === 'connect' ? 'passphrase' : step;
 

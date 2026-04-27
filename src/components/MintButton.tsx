@@ -5,10 +5,11 @@ import {
   useCallsStatus,
   useAccount,
   useReadContract,
+  useConnectorClient,
+  useSwitchChain,
 } from 'wagmi';
 import { encodeFunctionData, numberToHex } from 'viem';
 import { baseSepolia } from 'wagmi/chains';
-import { useConnectorClient } from 'wagmi';
 import { welcomeNftAbi } from '../constants';
 import { WELCOME_NFT_ADDRESS, PAYMASTER_SERVICE_URL } from '../config';
 
@@ -17,11 +18,16 @@ interface MintButtonProps {
 }
 
 export function MintButton({ onSuccess }: MintButtonProps) {
-  const { address } = useAccount();
-  const { data: connectorClient } = useConnectorClient({ chainId: baseSepolia.id });
+  const { address, chainId: connectedChainId } = useAccount();
+  const { data: connectorClient, error: clientError } = useConnectorClient({
+    chainId: baseSepolia.id,
+  });
+  const { switchChainAsync, isPending: isSwitchingChain } = useSwitchChain();
   const [txId, setTxId] = useState<string>();
   const [isPending, setIsPending] = useState(false);
   const [sendError, setSendError] = useState<Error | null>(null);
+
+  const isWrongChain = connectedChainId !== undefined && connectedChainId !== baseSepolia.id;
 
   const {
     data: alreadyMinted,
@@ -47,6 +53,35 @@ export function MintButton({ onSuccess }: MintButtonProps) {
       onSuccess();
     }
   }, [callsStatus?.status, onSuccess]);
+
+  if (isWrongChain) {
+    return (
+      <div className="flex flex-col items-center gap-4 animate-fade-in-up text-center w-full max-w-sm">
+        <p className="text-yellow-400 text-sm">
+          Your wallet is on chain {connectedChainId}. Switch to Base Sepolia to mint.
+        </p>
+        <button
+          type="button"
+          onClick={() => {
+            switchChainAsync({ chainId: baseSepolia.id }).catch((err) => {
+              console.error('[MintButton] switchChain error:', err);
+            });
+          }}
+          disabled={isSwitchingChain}
+          className="
+            w-full rounded-xl px-6 py-3 font-semibold text-white
+            bg-gradient-to-r from-stairs-blue to-blue-600
+            hover:from-blue-600 hover:to-stairs-blue
+            transition-all duration-300
+            disabled:opacity-40 disabled:cursor-not-allowed
+            box-glow
+          "
+        >
+          {isSwitchingChain ? 'Switching…' : 'Switch to Base Sepolia'}
+        </button>
+      </div>
+    );
+  }
 
   if (isCheckingMinted) {
     return (
@@ -100,7 +135,15 @@ export function MintButton({ onSuccess }: MintButtonProps) {
 
   const handleMint = async () => {
     if (!address || !connectorClient) {
-      console.error('[MintButton] Missing prerequisites', { address, hasClient: !!connectorClient });
+      const reason = clientError
+        ? `Wallet client unavailable: ${clientError.message}`
+        : 'Wallet client not ready. Try refreshing or reconnecting.';
+      console.error('[MintButton] Missing prerequisites', {
+        address,
+        hasClient: !!connectorClient,
+        clientError,
+      });
+      setSendError(new Error(reason));
       return;
     }
 

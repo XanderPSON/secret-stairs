@@ -1,11 +1,10 @@
 import { http, createConfig, createStorage, cookieStorage } from 'wagmi';
 import { baseSepolia } from 'wagmi/chains';
-import { coinbaseWallet, injected } from 'wagmi/connectors';
+import { coinbaseWallet } from 'wagmi/connectors';
 
 export const config = createConfig({
   chains: [baseSepolia],
   connectors: [
-    injected(),
     coinbaseWallet({
       appName: 'Secret Stairs',
       preference: 'smartWalletOnly',
