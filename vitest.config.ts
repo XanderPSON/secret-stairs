@@ -22,7 +22,7 @@ export default defineConfig({
       },
     },
     environment: 'jsdom',
-    exclude: ['**/node_modules/**', '.next/**', 'public/**'],
+    exclude: ['**/node_modules/**', '.next/**', 'public/**', 'contracts/**'],
     setupFiles: ['./vitest.setup.ts'],
     globals: true,
   },
