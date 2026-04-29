@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { AdminChain } from '../../lib/admin/chains';
 import { holders } from '../../lib/admin/derive';
 import { formatPT, truncateAddress } from '../../lib/admin/format';
@@ -30,9 +30,16 @@ export function HoldersTable({
   const all = useMemo(() => holders(events), [events]);
   const [page, setPage] = useState(0);
 
+  const totalPages = Math.max(1, Math.ceil(all.length / PAGE_SIZE));
+  // Clamp page if a refetch shrinks the dataset out from under us.
+  useEffect(() => {
+    if (page > totalPages - 1) {
+      setPage(0);
+    }
+  }, [page, totalPages]);
+
   const start = page * PAGE_SIZE;
   const slice = all.slice(start, start + PAGE_SIZE);
-  const totalPages = Math.max(1, Math.ceil(all.length / PAGE_SIZE));
 
   const onExport = () => {
     const rows: string[][] = [
