@@ -12,15 +12,30 @@ export function PassphraseForm({ onVerified }: PassphraseFormProps) {
   const [words, setWords] = useState<string[]>(Array(WORD_COUNT).fill(''));
   const [locked, setLocked] = useState<boolean[]>(Array(WORD_COUNT).fill(false));
   const [shaking, setShaking] = useState<number | null>(null);
+  const [invalid, setInvalid] = useState<boolean[]>(Array(WORD_COUNT).fill(false));
   const [activeIndex, setActiveIndex] = useState(0);
   const [isChecking, setIsChecking] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const wordsRef = useRef(words);
   wordsRef.current = words;
+  const debounceTimers = useRef<(ReturnType<typeof setTimeout> | null)[]>(
+    Array(WORD_COUNT).fill(null),
+  );
 
   useEffect(() => {
     inputRefs.current[activeIndex]?.focus();
   }, [activeIndex]);
+
+  useEffect(() => {
+    const timers = debounceTimers.current;
+    return () => {
+      for (const t of timers) {
+        if (t) {
+          clearTimeout(t);
+        }
+      }
+    };
+  }, []);
 
   const verifyWord = useCallback(async (word: string, index: number) => {
     setIsChecking(true);
@@ -39,47 +54,76 @@ export function PassphraseForm({ onVerified }: PassphraseFormProps) {
     }
   }, []);
 
-  const handleSubmitWord = useCallback(async (index: number) => {
-    const word = wordsRef.current[index].trim();
-    if (!word) return;
-
-    const valid = await verifyWord(word, index);
-
-    if (valid) {
-      setLocked((prev) => {
-        const next = [...prev];
-        next[index] = true;
-        return next;
-      });
-
-      const nextEmpty = locked.findIndex((l, i) => !l && i > index);
-      const nextIndex = nextEmpty >= 0 ? nextEmpty : locked.findIndex((l, i) => !l && i !== index);
-
-      if (nextIndex >= 0) {
-        setActiveIndex(nextIndex);
+  const lockAndAdvance = useCallback((index: number) => {
+    setInvalid((prev) => {
+      if (!prev[index]) {
+        return prev;
       }
+      const next = [...prev];
+      next[index] = false;
+      return next;
+    });
+    setLocked((prev) => {
+      const next = [...prev];
+      next[index] = true;
+      return next;
+    });
 
-      const allLocked = locked.every((l, i) => l || i === index);
-      if (allLocked) {
-        setTimeout(onVerified, 600);
-      }
-    } else {
-      setShaking(index);
-      setTimeout(() => {
-        setShaking(null);
-        setWords((prev) => {
-          const next = [...prev];
-          next[index] = '';
-          return next;
-        });
-      }, 400);
+    const nextEmpty = locked.findIndex((l, i) => !l && i > index);
+    const nextIndex =
+      nextEmpty >= 0
+        ? nextEmpty
+        : locked.findIndex((l, i) => !l && i !== index);
+
+    if (nextIndex >= 0) {
+      setActiveIndex(nextIndex);
     }
-  }, [locked, verifyWord, onVerified]);
+
+    const allLocked = locked.every((l, i) => l || i === index);
+    if (allLocked) {
+      setTimeout(onVerified, 600);
+    }
+  }, [locked, onVerified]);
+
+  // Silent auto-check while the user is still typing: lock if correct,
+  // do absolutely nothing if wrong (no shake, no clear, no red).
+  const tryAutoLock = useCallback(async (index: number) => {
+    const word = wordsRef.current[index].trim();
+    if (!word) {
+      return;
+    }
+    const valid = await verifyWord(word, index);
+    if (valid && !locked[index]) {
+      lockAndAdvance(index);
+    }
+  }, [verifyWord, locked, lockAndAdvance]);
+
+  // Explicit submit: user pressed Space/Enter/Tab or blurred the field. Show
+  // shake + red on failure but keep the typed word intact so they can fix it.
+  const submitWord = useCallback(async (index: number) => {
+    const word = wordsRef.current[index].trim();
+    if (!word || locked[index]) {
+      return;
+    }
+    const valid = await verifyWord(word, index);
+    if (valid) {
+      lockAndAdvance(index);
+      return;
+    }
+    setInvalid((prev) => {
+      const next = [...prev];
+      next[index] = true;
+      return next;
+    });
+    setShaking(index);
+    setTimeout(() => setShaking(null), 400);
+  }, [verifyWord, locked, lockAndAdvance]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent, index: number) => {
     if (e.key === ' ' || e.key === 'Enter') {
       e.preventDefault();
-      handleSubmitWord(index);
+      submitWord(index);
+      return;
     }
 
     if (e.key === 'Backspace' && words[index] === '' && index > 0) {
@@ -92,12 +136,18 @@ export function PassphraseForm({ onVerified }: PassphraseFormProps) {
         setActiveIndex(prevUnlocked);
       }
     }
+    // Tab is intentionally NOT handled — let the browser move focus naturally,
+    // which fires onBlur and routes through the same submitWord path.
+  }, [words, locked, submitWord]);
 
-    if (e.key === 'Tab') {
-      e.preventDefault();
-      handleSubmitWord(index);
+  const handleBlur = useCallback((index: number) => {
+    // Cancel any pending silent auto-check; the explicit submitWord covers it.
+    if (debounceTimers.current[index]) {
+      clearTimeout(debounceTimers.current[index]);
+      debounceTimers.current[index] = null;
     }
-  }, [words, locked, handleSubmitWord]);
+    submitWord(index);
+  }, [submitWord]);
 
   const handlePaste = useCallback(async (e: React.ClipboardEvent, index: number) => {
     const pasted = e.clipboardData.getData('text').trim();
@@ -109,31 +159,45 @@ export function PassphraseForm({ onVerified }: PassphraseFormProps) {
 
     const newWords = [...words];
     const newLocked = [...locked];
+    const newInvalid = [...invalid];
     let slot = index;
 
     for (const pw of pastedWords) {
       while (slot < WORD_COUNT && newLocked[slot]) slot++;
       if (slot >= WORD_COUNT) break;
       newWords[slot] = pw;
+      newInvalid[slot] = false;
       slot++;
     }
 
     setWords(newWords);
+    setInvalid(newInvalid);
+
+    const wrongIndices: number[] = [];
 
     for (let i = index; i < WORD_COUNT; i++) {
-      if (newLocked[i] || !newWords[i]) continue;
-
+      if (newLocked[i] || !newWords[i]) {
+        continue;
+      }
       const valid = await verifyWord(newWords[i], i);
       if (valid) {
         newLocked[i] = true;
         setLocked([...newLocked]);
       } else {
-        setShaking(i);
-        newWords[i] = '';
-        setWords([...newWords]);
-        await new Promise((r) => setTimeout(r, 400));
-        setShaking(null);
+        wrongIndices.push(i);
       }
+    }
+
+    if (wrongIndices.length > 0) {
+      setInvalid((prev) => {
+        const next = [...prev];
+        for (const i of wrongIndices) {
+          next[i] = true;
+        }
+        return next;
+      });
+      setShaking(wrongIndices[0]);
+      setTimeout(() => setShaking(null), 400);
     }
 
     setLocked([...newLocked]);
@@ -144,30 +208,40 @@ export function PassphraseForm({ onVerified }: PassphraseFormProps) {
     }
 
     const nextEmpty = newLocked.findIndex((l) => !l);
-    if (nextEmpty >= 0) setActiveIndex(nextEmpty);
-  }, [words, locked, verifyWord, onVerified]);
-
-  const debounceTimers = useRef<(ReturnType<typeof setTimeout> | null)[]>(
-    Array(WORD_COUNT).fill(null)
-  );
+    if (nextEmpty >= 0) {
+      setActiveIndex(nextEmpty);
+    }
+  }, [words, locked, invalid, verifyWord, onVerified]);
 
   const handleChange = (value: string, index: number) => {
-    if (locked[index]) return;
+    if (locked[index]) {
+      return;
+    }
     const cleaned = value.replace(/\s/g, '');
     setWords((prev) => {
       const next = [...prev];
       next[index] = cleaned;
       return next;
     });
+    // Editing clears any prior 'invalid' red state for this slot — the user
+    // is fixing the word, so don't keep yelling at them.
+    setInvalid((prev) => {
+      if (!prev[index]) {
+        return prev;
+      }
+      const next = [...prev];
+      next[index] = false;
+      return next;
+    });
 
     if (debounceTimers.current[index]) {
-      clearTimeout(debounceTimers.current[index]!);
+      clearTimeout(debounceTimers.current[index]);
     }
 
-    if (cleaned.length >= 2) {
+    if (cleaned.length >= 3) {
       debounceTimers.current[index] = setTimeout(() => {
-        handleSubmitWord(index);
-      }, 400);
+        tryAutoLock(index);
+      }, 600);
     }
   };
 
@@ -194,6 +268,7 @@ export function PassphraseForm({ onVerified }: PassphraseFormProps) {
               onKeyDown={(e) => handleKeyDown(e, i)}
               onPaste={(e) => handlePaste(e, i)}
               onFocus={() => !locked[i] && setActiveIndex(i)}
+              onBlur={() => handleBlur(i)}
               disabled={locked[i] || isChecking}
               placeholder={String(i + 1)}
               autoComplete="off"
@@ -208,7 +283,7 @@ export function PassphraseForm({ onVerified }: PassphraseFormProps) {
                     ? 'bg-stairs-dim border-stairs-blue/60 text-white border box-glow'
                     : 'bg-stairs-dim border-gray-700/50 text-gray-400 border hover:border-gray-600'
                 }
-                ${shaking === i ? 'border-red-500 bg-red-500/10' : ''}
+                ${invalid[i] || shaking === i ? 'border-red-500 bg-red-500/10' : ''}
                 placeholder:text-gray-600 placeholder:text-xs
                 disabled:cursor-default
               `}
