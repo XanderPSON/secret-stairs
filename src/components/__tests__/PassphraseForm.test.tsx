@@ -131,4 +131,57 @@ describe('PassphraseForm — validation timing', () => {
     await flushDebounce();
     expect(global.fetch).toHaveBeenCalled();
   });
+
+  it('on touch devices, blur with a wrong word is silent (no shake/red)', async () => {
+    const original = window.matchMedia;
+    window.matchMedia = ((query: string) => ({
+      matches: query === '(pointer: coarse)',
+      media: query,
+      onchange: null,
+      addListener: () => {},
+      removeListener: () => {},
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      dispatchEvent: () => false,
+    })) as typeof window.matchMedia;
+    try {
+      render(<PassphraseForm onVerified={() => {}} />);
+      const input = screen.getAllByRole('textbox')[0];
+      fireEvent.change(input, { target: { value: 'wrongword' } });
+      fireEvent.blur(input);
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(500);
+      });
+      expect(input).toHaveValue('wrongword');
+      expect(input).not.toHaveClass('border-red-500');
+    } finally {
+      window.matchMedia = original;
+    }
+  });
+
+  it('on touch devices, blur with the correct word still locks', async () => {
+    const original = window.matchMedia;
+    window.matchMedia = ((query: string) => ({
+      matches: query === '(pointer: coarse)',
+      media: query,
+      onchange: null,
+      addListener: () => {},
+      removeListener: () => {},
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      dispatchEvent: () => false,
+    })) as typeof window.matchMedia;
+    try {
+      render(<PassphraseForm onVerified={() => {}} />);
+      const input = screen.getAllByRole('textbox')[0];
+      fireEvent.change(input, { target: { value: 'apple' } });
+      fireEvent.blur(input);
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(50);
+      });
+      expect(input).toBeDisabled();
+    } finally {
+      window.matchMedia = original;
+    }
+  });
 });

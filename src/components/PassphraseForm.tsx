@@ -141,13 +141,23 @@ export function PassphraseForm({ onVerified }: PassphraseFormProps) {
   }, [words, locked, submitWord]);
 
   const handleBlur = useCallback((index: number) => {
-    // Cancel any pending silent auto-check; the explicit submitWord covers it.
     if (debounceTimers.current[index]) {
       clearTimeout(debounceTimers.current[index]);
       debounceTimers.current[index] = null;
     }
-    submitWord(index);
-  }, [submitWord]);
+    // On touch devices, blur fires for many non-intentional reasons (scroll,
+    // suggestion bar tap, keyboard dismissal). Treat blur as a silent
+    // auto-check there \u2014 lock if correct, do nothing if wrong. On desktop,
+    // blur is an explicit "I'm done" signal so use the noisy submitWord path.
+    const isTouch =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(pointer: coarse)').matches;
+    if (isTouch) {
+      tryAutoLock(index);
+    } else {
+      submitWord(index);
+    }
+  }, [submitWord, tryAutoLock]);
 
   const handlePaste = useCallback(async (e: React.ClipboardEvent, index: number) => {
     const pasted = e.clipboardData.getData('text').trim();
@@ -273,7 +283,13 @@ export function PassphraseForm({ onVerified }: PassphraseFormProps) {
               placeholder={String(i + 1)}
               autoComplete="off"
               autoCapitalize="off"
+              autoCorrect="off"
               spellCheck={false}
+              inputMode="text"
+              enterKeyHint="done"
+              data-form-type="other"
+              data-1p-ignore="true"
+              data-lpignore="true"
               className={`
                 w-full h-11 rounded-lg text-center text-sm font-mono
                 transition-all duration-300 outline-none
