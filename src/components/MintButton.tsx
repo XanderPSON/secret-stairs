@@ -14,7 +14,7 @@ import { useConfig } from 'wagmi';
 import { encodeFunctionData, numberToHex } from 'viem';
 import { baseSepolia } from 'wagmi/chains';
 import { welcomeNftAbi } from '../constants';
-import { WELCOME_NFT_ADDRESS, PAYMASTER_SERVICE_URL } from '../config';
+import { WELCOME_NFT_ADDRESS } from '../config';
 
 function isSmartWalletConnector(id: string | undefined, type: string | undefined): boolean {
   return id === 'coinbaseWalletSDK' || type === 'coinbaseWallet';
@@ -170,6 +170,11 @@ export function MintButton({ onSuccess }: MintButtonProps) {
           args: [address],
         });
 
+        // Route paymaster requests through our own /api/paymaster proxy so
+        // the CDP API key stays server-side. The wallet POSTs the userOp to
+        // this URL and our route forwards it to CDP.
+        const paymasterProxyUrl = `${window.location.origin}/api/paymaster`;
+
         const params = [
           {
             version: '1.0',
@@ -183,7 +188,7 @@ export function MintButton({ onSuccess }: MintButtonProps) {
               },
             ],
             capabilities: {
-              paymasterService: { url: PAYMASTER_SERVICE_URL },
+              paymasterService: { url: paymasterProxyUrl },
             },
           },
         ];

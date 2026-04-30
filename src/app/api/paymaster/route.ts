@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const PAYMASTER_URL = process.env.PAYMASTER_URL ?? '';
+const PAYMASTER_URL = (
+  process.env.PAYMASTER_URL ??
+  process.env.NEXT_PUBLIC_PAYMASTER_URL ??
+  ''
+).trim();
 
 export async function POST(req: NextRequest) {
   if (!PAYMASTER_URL) {
