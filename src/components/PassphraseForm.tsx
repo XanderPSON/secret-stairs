@@ -14,7 +14,6 @@ export function PassphraseForm({ onVerified }: PassphraseFormProps) {
   const [shaking, setShaking] = useState<number | null>(null);
   const [invalid, setInvalid] = useState<boolean[]>(Array(WORD_COUNT).fill(false));
   const [activeIndex, setActiveIndex] = useState(0);
-  const [isChecking, setIsChecking] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const wordsRef = useRef(words);
   wordsRef.current = words;
@@ -38,7 +37,6 @@ export function PassphraseForm({ onVerified }: PassphraseFormProps) {
   }, []);
 
   const verifyWord = useCallback(async (word: string, index: number) => {
-    setIsChecking(true);
     try {
       const res = await fetch('/api/verify-passphrase', {
         method: 'POST',
@@ -49,8 +47,6 @@ export function PassphraseForm({ onVerified }: PassphraseFormProps) {
       return data.valid;
     } catch {
       return false;
-    } finally {
-      setIsChecking(false);
     }
   }, []);
 
@@ -279,7 +275,7 @@ export function PassphraseForm({ onVerified }: PassphraseFormProps) {
               onPaste={(e) => handlePaste(e, i)}
               onFocus={() => !locked[i] && setActiveIndex(i)}
               onBlur={() => handleBlur(i)}
-              disabled={locked[i] || isChecking}
+              disabled={locked[i]}
               placeholder={String(i + 1)}
               autoComplete="off"
               autoCapitalize="off"
