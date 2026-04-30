@@ -28,7 +28,7 @@ export function ConnectWallet() {
 
   if (!isConnected) {
     return (
-      <div className="flex flex-col gap-3 w-full max-w-sm animate-fade-in-up">
+      <div className="flex flex-col gap-3 w-full max-w-sm mx-auto animate-fade-in-up">
         {connectors.map((connector) => (
           <button
             key={connector.uid}

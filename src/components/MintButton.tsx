@@ -72,7 +72,7 @@ export function MintButton({ onSuccess }: MintButtonProps) {
 
   if (isWrongChain) {
     return (
-      <div className="flex flex-col items-center gap-4 animate-fade-in-up text-center w-full max-w-sm">
+      <div className="flex flex-col items-center gap-4 animate-fade-in-up text-center w-full max-w-sm mx-auto">
         <p className="text-yellow-400 text-sm">
           Your wallet is on chain {connectedChainId}. Switch to Base Sepolia to mint.
         </p>
@@ -218,7 +218,7 @@ export function MintButton({ onSuccess }: MintButtonProps) {
     (!!txHash && txReceipt?.status !== 'success');
 
   return (
-    <div className="flex flex-col items-center gap-4 w-full max-w-sm animate-fade-in-up">
+    <div className="flex flex-col items-center gap-4 w-full max-w-sm mx-auto animate-fade-in-up">
       {!isSmartWallet && (
         <p className="text-yellow-400/80 text-xs text-center">
           Heads up: this wallet pays its own gas. Connect a Smart Wallet for a sponsored mint.

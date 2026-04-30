@@ -175,7 +175,7 @@ export function PassphraseForm({ onVerified }: PassphraseFormProps) {
   const allLocked = lockedCount === WORD_COUNT;
 
   return (
-    <div className="flex flex-col items-center gap-4 w-full max-w-sm animate-fade-in-up">
+    <div className="flex flex-col items-center gap-4 w-full max-w-sm mx-auto animate-fade-in-up">
       <p className="text-xs text-gray-500 tracking-wide uppercase">
         {lockedCount} / {WORD_COUNT} words decoded
       </p>
