@@ -3,15 +3,21 @@
 import { useMemo } from 'react';
 import type { AdminChain } from '../../lib/admin/chains';
 import { recentFeed } from '../../lib/admin/derive';
-import { timeAgo, truncateAddress } from '../../lib/admin/format';
-import type { MintEvent } from '../../lib/admin/types';
+import { timeAgo } from '../../lib/admin/format';
+import type { Address, MintEvent } from '../../lib/admin/types';
+import { AddressLabel } from './AddressLabel';
 import { WidgetCard } from './WidgetCard';
 import { WidgetEmpty } from './WidgetEmpty';
 
 export function RecentMintsFeed({
   chain,
   events,
-}: { chain: AdminChain; events: MintEvent[] }) {
+  basenames = {},
+}: {
+  chain: AdminChain;
+  events: MintEvent[];
+  basenames?: Record<Address, string | null>;
+}) {
   const feed = useMemo(() => recentFeed(events, 20), [events]);
 
   return (
@@ -33,9 +39,8 @@ export function RecentMintsFeed({
                 target="_blank"
                 rel="noreferrer"
                 className="font-mono text-white/60 hover:text-white"
-                title={e.to}
               >
-                {truncateAddress(e.to)}
+                <AddressLabel address={e.to} basename={basenames[e.to]} />
               </a>
               <span className="text-white/40 text-xs">{timeAgo(e.timestamp)}</span>
               <a

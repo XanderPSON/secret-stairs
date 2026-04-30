@@ -3,8 +3,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { AdminChain } from '../../lib/admin/chains';
 import { holders } from '../../lib/admin/derive';
-import { formatPT, truncateAddress } from '../../lib/admin/format';
-import type { MintEvent } from '../../lib/admin/types';
+import { formatPT } from '../../lib/admin/format';
+import type { Address, MintEvent } from '../../lib/admin/types';
+import { AddressLabel } from './AddressLabel';
 import { WidgetCard } from './WidgetCard';
 import { WidgetEmpty } from './WidgetEmpty';
 
@@ -26,7 +27,12 @@ function downloadCsv(filename: string, rows: string[][]) {
 export function HoldersTable({
   chain,
   events,
-}: { chain: AdminChain; events: MintEvent[] }) {
+  basenames = {},
+}: {
+  chain: AdminChain;
+  events: MintEvent[];
+  basenames?: Record<Address, string | null>;
+}) {
   const all = useMemo(() => holders(events), [events]);
   const [page, setPage] = useState(0);
 
@@ -43,10 +49,11 @@ export function HoldersTable({
 
   const onExport = () => {
     const rows: string[][] = [
-      ['token_id', 'address', 'minted_at_unix', 'minted_at_pt'],
+      ['token_id', 'address', 'basename', 'minted_at_unix', 'minted_at_pt'],
       ...all.map((h) => [
         h.tokenId.toString(),
         h.address,
+        basenames[h.address] ?? '',
         h.mintedAt.toString(),
         formatPT(h.mintedAt),
       ]),
@@ -96,9 +103,11 @@ export function HoldersTable({
                       target="_blank"
                       rel="noreferrer"
                       className="font-mono text-white/70 hover:text-white"
-                      title={h.address}
                     >
-                      {truncateAddress(h.address)}
+                      <AddressLabel
+                        address={h.address}
+                        basename={basenames[h.address]}
+                      />
                     </a>
                   </td>
                   <td className="text-right font-mono text-white/50 text-xs">

@@ -1,6 +1,7 @@
 'use client';
 
 import { notFound } from 'next/navigation';
+import { useMemo } from 'react';
 import { ADMIN_CHAINS, getChain } from '../../../lib/admin/chains';
 import { AdminHeader } from '../../../components/admin/AdminHeader';
 import { HoldersTable } from '../../../components/admin/HoldersTable';
@@ -14,6 +15,7 @@ import { WidgetCard } from '../../../components/admin/WidgetCard';
 import { WidgetEmpty } from '../../../components/admin/WidgetEmpty';
 import { WidgetError } from '../../../components/admin/WidgetError';
 import { WidgetSkeleton } from '../../../components/admin/WidgetSkeleton';
+import { useBasenames } from '../../../lib/admin/useBasenames';
 import { useMintEvents } from '../../../lib/admin/useMintEvents';
 
 export default function AdminChainPage({
@@ -27,6 +29,12 @@ export default function AdminChainPage({
     useMintEvents(chain);
 
   const events = data ?? [];
+  const minterAddresses = useMemo(
+    () => [...new Set(events.map((e) => e.to))],
+    [events],
+  );
+  const { data: basenamesData } = useBasenames(minterAddresses);
+  const basenames = basenamesData ?? {};
 
   return (
     <div className="space-y-6">
@@ -64,10 +72,18 @@ export default function AdminChainPage({
             <WalletTypeBreakdown chain={chain} events={events} />
           </div>
           <div className="grid gap-6 lg:grid-cols-2">
-            <RecentMintsFeed chain={chain} events={events} />
-            <HoldersTable chain={chain} events={events} />
+            <RecentMintsFeed
+              chain={chain}
+              events={events}
+              basenames={basenames}
+            />
+            <HoldersTable
+              chain={chain}
+              events={events}
+              basenames={basenames}
+            />
           </div>
-          <PassGallery chain={chain} events={events} />
+          <PassGallery chain={chain} events={events} basenames={basenames} />
         </>
       )}
     </div>

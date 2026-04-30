@@ -5,15 +5,18 @@ import type { AdminChain } from '../../lib/admin/chains';
 import { formatPT, truncateAddress } from '../../lib/admin/format';
 import type { MintEvent } from '../../lib/admin/types';
 import { useTokenMetadata } from '../../lib/admin/useTokenMetadata';
+import { AddressLabel } from './AddressLabel';
 import { WidgetSkeleton } from './WidgetSkeleton';
 
 export function PassDetailModal({
   chain,
   mint,
+  basename,
   onClose,
 }: {
   chain: AdminChain;
   mint: MintEvent;
+  basename?: string | null;
   onClose: () => void;
 }) {
   const { data, isLoading } = useTokenMetadata(chain, mint.tokenId);
@@ -96,7 +99,7 @@ export function PassDetailModal({
                 rel="noreferrer"
                 className="font-mono text-white hover:text-[#3380FF]"
               >
-                {truncateAddress(mint.to)} ↗
+                <AddressLabel address={mint.to} basename={basename} /> ↗
               </a>
             </dd>
           </div>
