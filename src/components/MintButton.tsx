@@ -225,9 +225,19 @@ export function MintButton({ onSuccess }: MintButtonProps) {
   return (
     <div className="flex flex-col items-center gap-4 w-full max-w-sm mx-auto animate-fade-in-up">
       {!isSmartWallet && (
-        <p className="text-yellow-400/80 text-xs text-center">
-          Heads up: this wallet pays its own gas. Connect a Smart Wallet for a sponsored mint.
-        </p>
+        <div className="flex flex-col items-center gap-1.5 text-center">
+          <p className="text-yellow-400/80 text-xs">
+            Heads up: this wallet pays its own gas. Connect a Smart Wallet for a sponsored mint.
+          </p>
+          <a
+            href="https://portal.cdp.coinbase.com/products/faucet"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-stairs-blue text-xs underline hover:text-blue-300"
+          >
+            Need Base Sepolia ETH? Get some from the faucet →
+          </a>
+        </div>
       )}
       <button
         onClick={handleMint}
