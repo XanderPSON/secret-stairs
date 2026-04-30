@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import type { AdminChain } from '../../lib/admin/chains';
-import type { MintEvent } from '../../lib/admin/types';
+import type { Address, MintEvent } from '../../lib/admin/types';
 import { useTokenMetadata } from '../../lib/admin/useTokenMetadata';
 import { PassDetailModal } from './PassDetailModal';
 import { WidgetCard } from './WidgetCard';
@@ -44,7 +44,12 @@ function GalleryTile({
 export function PassGallery({
   chain,
   events,
-}: { chain: AdminChain; events: MintEvent[] }) {
+  basenames = {},
+}: {
+  chain: AdminChain;
+  events: MintEvent[];
+  basenames?: Record<Address, string | null>;
+}) {
   const [sort, setSort] = useState<SortKey>('newest');
   const [openMint, setOpenMint] = useState<MintEvent | null>(null);
 
@@ -99,6 +104,7 @@ export function PassGallery({
         <PassDetailModal
           chain={chain}
           mint={openMint}
+          basename={basenames[openMint.to] ?? null}
           onClose={() => setOpenMint(null)}
         />
       ) : null}
