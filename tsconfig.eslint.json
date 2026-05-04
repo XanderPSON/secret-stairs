@@ -1,0 +1,20 @@
+{
+  "extends": "./tsconfig.base.json",
+  "include": [
+    ".*.js",
+    "*.js",
+    "yarn.config.cjs",
+    "apps/**/*",
+    "examples/**/*",
+    "libs/**/*",
+    "packages/**/*",
+  ],
+  "exclude": [
+    "**/cjs/**/*",
+    "**/dts/**/*",
+    "**/esm/**/*",
+    "**/lib/**/*",
+    "**/mjs/**/*",
+    "**/node_modules/**/*",
+  ]
+}

@@ -1,0 +1,37 @@
+name: nx-tools
+run-name: ${{ github.head_ref }} ${{ github.event.pull_request.head.sha }}
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+permissions:
+  id-token: write
+  contents: read
+  issues: write
+  pull-requests: write
+  checks: write
+
+# cancels workflow run if another commit is pushed
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # the main nx-build-tools workflow
+  nx:
+    uses: infra/cb-workflow-nx-build-tools/.github/workflows/nx-build-tools.yml@stable
+    secrets: inherit
+    with:
+      nodeMajorVersion: 24
+
+  # a job to give an overall pass/fail status (should make this a required status check)
+  summarize-results:
+    needs: [nx]
+    if: always()
+    name: Job Status Rollup
+    uses: infra/cb-workflow-result-summary/.github/workflows/workflow-check.yml@master
+    with:
+      include-job-summary: true

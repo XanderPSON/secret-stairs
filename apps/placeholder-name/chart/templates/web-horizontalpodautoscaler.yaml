@@ -1,0 +1,12 @@
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: placeholder-name
+spec:
+  maxReplicas: {{ index .Values "services" "placeholder-name" "scaling" "max" }}
+  minReplicas: {{ index .Values "services" "placeholder-name" "scaling" "min" }}
+  scaleTargetRef:
+    apiVersion: argoproj.io/v1alpha1
+    kind: Rollout
+    name: placeholder-name
+  targetCPUUtilizationPercentage: {{ index .Values "services" "placeholder-name" "scaling" "targetcpu" }}

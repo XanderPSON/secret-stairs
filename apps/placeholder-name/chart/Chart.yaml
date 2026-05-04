@@ -1,0 +1,10 @@
+apiVersion: v2
+name: placeholder-name
+description: 'static description'
+type: application
+version: 0.1.0
+appVersion: '0.1.0'
+dependencies:
+  - name: infra-common
+    version: 0.1.19
+    repository: "oci://652969937640.dkr.ecr.us-east-1.amazonaws.com/charts/infra-common"

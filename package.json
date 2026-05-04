@@ -1,0 +1,68 @@
+{
+  "name": "placeholder-name",
+  "version": "1.0.0",
+  "description": "static description",
+  "repository": "git@github.cbhq.net:placeholder-org/placeholder-name.git",
+  "private": true,
+  "scripts": {
+    "build": "",
+    "codeowners": "mono-pipeline sync-codeowners",
+    "diagnose": "mono-env diagnose",
+    "setup": "mono-env setup"
+  },
+  "workspaces": [
+    "apps/*",
+    "libs/*",
+    "packages/*"
+  ],
+  "devDependencies": {
+    "@cbhq/client-analytics": "^12.10.1",
+    "@cbhq/data-layer": "^13.8.1",
+    "@cbhq/data-layer-nx-tasks": "^6.1.0",
+    "@cbhq/eslint-plugin": "^3.38.0",
+    "@cbhq/jest-preset": "^0.5.0",
+    "@cbhq/mono-env": "^0.3.6",
+    "@cbhq/mono-pipeline": "^1.8.0",
+    "@cbhq/mono-tasks": "^1.18.0",
+    "@cbhq/mono-templates": "^6.1.0",
+    "@cbhq/yarn-constraints": "^1.0.1",
+    "@nx/devkit": "22.7.0",
+    "@nx/workspace": "22.7.0",
+    "@swc/core": "1.7.42",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@types/webpack-env": "^1.18.8",
+    "@yarnpkg/types": "^4.0.1",
+    "babel-plugin-formatjs": "^10.5.38",
+    "babel-plugin-relay": "^16.2.0",
+    "babel-plugin-tsconfig-paths": "^1.0.3",
+    "eslint": "^8.57.1",
+    "graphql": "^16.8.1",
+    "jest": "^30.0.0",
+    "nx": "22.7.0",
+    "prettier": "^3.5.3",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "typescript": "5.8.3"
+  },
+  "resolutions": {
+    "@swc/core": "1.7.42",
+    "eslint-plugin-react-hooks": "4.6.0",
+    "happy-dom": "^20.0.0",
+    "tar": "7.5.4",
+    "ws": "8.17.1"
+  },
+  "resolutionComments": {
+    "@swc/core": "swc is not built by default",
+    "eslint-plugin-react-hooks": "eslint-config-next prefers installing 5.0.0-canary for some reason",
+    "happy-dom": "Security update to v20+ to address vulnerabilities in older versions",
+    "tar": "Security update to v7.5.4",
+    "ws": "Security update to v8.17.1 to address vulnerabilities in v8.13.0"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "packageManager": "yarn@4.8.1"
+}

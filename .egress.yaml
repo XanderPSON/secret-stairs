@@ -1,0 +1,17 @@
+# .egress.yaml — Declare external domains this service needs to reach.
+#
+# The NFW Controller reads this file on each push to master and opens a PR
+# in security/network-firewall to create/update AWS Network Firewall rules.
+#
+# Docs: https://docs.cbhq.net/infra/network-security/nfw-controller
+# Questions: #ask-infrasec
+#
+# Uncomment and fill in when this service needs outbound internet access:
+# rules:
+#   - vpc: production
+#     domains:
+#       - api.example.com
+#       - "*.s3.us-east-1.amazonaws.com"
+#     ports: [443]
+#     protocol: tls
+#     justification: "Brief reason why this service needs these domains"

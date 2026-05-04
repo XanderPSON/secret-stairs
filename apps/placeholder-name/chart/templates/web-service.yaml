@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    {{- with $.Values.mesh }}
+    {{- if .enabled }}
+    mesh.cbhq.net/enabled: "{{ .enabled }}"
+    mesh.cbhq.net/hostname: "{{ .hostname }}"
+    mesh.cbhq.net/ingress-port-mapping: "443:3001"
+    {{- end }}
+    {{- end }}
+  name: placeholder-name
+spec:
+  ports:
+    - name: nextjs
+      port: 3001
+      targetPort: 3001
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: placeholder-org-placeholder-name
+    app.kubernetes.io/component: placeholder-name

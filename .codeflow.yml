@@ -1,0 +1,20 @@
+secure:
+  required_reviews: 1
+  requires_mfa: true
+  branches:
+    - master
+  authorized_bots: []
+  allows_soft_reviews: true
+  codeowners_enabled: true
+  auto_assign_reviewers: true
+
+build:
+  engines:
+    - BaldurECR:
+        autobuild: false
+        name: placeholder-name
+        path: ./apps/placeholder-name/Dockerfile
+        expire_keep_tags_after_days: 90
+        expire_tmp_tags_after_days: 30
+        expire_all_after_days: 90
+        architecture: arm64

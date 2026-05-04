@@ -1,0 +1,159 @@
+{
+  "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "cli": {
+    "packageManager": "yarn"
+  },
+  "namedInputs": {
+    "default": [
+      "{projectRoot}/**/*",
+      "sharedGlobals"
+    ],
+    "sharedGlobals": [
+      "{workspaceRoot}/.*ignore",
+      "{workspaceRoot}/.eslintrc.js",
+      "{workspaceRoot}/.github/**/*.yml",
+      "{workspaceRoot}/.nvmrc",
+      "{workspaceRoot}/*.config.js",
+      "{workspaceRoot}/nx.json",
+      "{workspaceRoot}/package.json",
+      "{workspaceRoot}/tsconfig.json",
+      "{workspaceRoot}/tsconfig.*.json"
+    ],
+    "production": [
+      "default"
+    ]
+  },
+  "targetDefaults": {
+    "build": {
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "production",
+        "^production"
+      ],
+      "outputs": [
+        "{workspaceRoot}/.nx/outs/projects/{projectRoot}",
+        "{projectRoot}/assets",
+        "{projectRoot}/cjs",
+        "{projectRoot}/dts",
+        "{projectRoot}/esm",
+        "{projectRoot}/lib",
+        "{projectRoot}/mjs"
+      ],
+      "cache": true
+    },
+    "danger": {
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "production",
+        "^production"
+      ]
+    },
+    "lint": {
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "production",
+        "^production"
+      ],
+      "cache": true
+    },
+    "format": {
+      "inputs": [
+        "production"
+      ],
+      "cache": true
+    },
+    "start": {
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "production",
+        "^production"
+      ]
+    },
+    "test": {
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "production",
+        "^production"
+      ],
+      "outputs": [
+        "{workspaceRoot}/.nx/outs/projects/{projectRoot}/coverage"
+      ],
+      "cache": true
+    },
+    "typecheck": {
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "production",
+        "^production"
+      ],
+      "outputs": [
+        "{workspaceRoot}/.nx/dts/{projectRoot}"
+      ],
+      "cache": true
+    },
+    "report-disabled-eslint-rules": {
+      "inputs": [
+        "production",
+        "!{projectRoot}/artifacts/disabled-eslint-rules.txt",
+        "!{projectRoot}/artifacts/disabled-eslint-rules.json",
+        "{workspaceRoot}/.prevent-eslint-disable.json"
+      ],
+      "outputs": [
+        "{projectRoot}/artifacts/disabled-eslint-rules.txt",
+        "{projectRoot}/artifacts/disabled-eslint-rules.json"
+      ],
+      "cache": true
+    },
+    "relay": {
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "production",
+        "^production",
+        "!{projectRoot}/src/persisted_queries.json",
+        "!{projectRoot}/src/**/__generated__/*.graphql.*"
+      ],
+      "outputs": [
+        "{projectRoot}/src/persisted_queries.json",
+        "{projectRoot}/src/**/__generated__/*.graphql.*"
+      ],
+      "cache": true
+    },
+    "schema": {
+      "outputs": [
+        "{projectRoot}/schema.graphql"
+      ]
+    },
+    "lint-styles": {
+      "cache": true
+    },
+    "e2e": {
+      "cache": true
+    }
+  },
+  "workspaceLayout": {
+    "appsDir": "apps",
+    "libsDir": "packages"
+  },
+  "analytics": false,
+  "tui": {
+    "enabled": false
+  },
+  "cacheDirectory": "./.nx/cache",
+  "useInferencePlugins": false,
+  "defaultBase": "master",
+  "useLegacyCache": true
+}

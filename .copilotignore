@@ -1,0 +1,6 @@
+# This Copilot Ignore file (go/copilot-ignore) controls which file(s)
+# are transmitted to GitHub’s Copilot when making code suggestions.
+
+# By default all files are blocked. List individual packages/apps, or subsets of them, to enable copilot on them
+
+*

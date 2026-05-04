@@ -1,0 +1,2 @@
+cluster: placeholder-staging-k8s-cluster
+chart_path: apps/placeholder-name/chart

@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.projectOptions.json",
+  "include": [],
+  "files": [],
+  "references": [
+    {
+      "path": "apps/placeholder-name"
+    },
+  ]
+}

@@ -1,0 +1,19 @@
+services:
+  placeholder-name:
+    containers:
+      nextjs:
+        resources:
+          limits:
+            cpu: 2800m
+            memory: 2G
+          requests:
+            cpu: 700m
+            memory: 1000M
+        image: placeholder-name
+    scaling:
+      min: 1
+      max: 2
+      targetcpu: 60
+mesh:
+  enabled: true
+  hostname: placeholder-url-name-dev.cbhq.net

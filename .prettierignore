@@ -1,0 +1,28 @@
+*.graphql
+**/persisted_queries.json
+**/__generated__
+**/graphqlIntrospectionQueryResult.json
+
+# Nx
+.docusaurus
+.next
+.nx
+cjs/
+dts/
+esm/
+lib/
+mjs/
+out/
+package.json
+tsconfig.json
+tsconfig.*.json
+
+# React Native
+**/android/app/build
+**/ios/Pods
+
+# Helm Charts
+**/chart/**
+
+/.nx/cache
+/.nx/workspace-data
