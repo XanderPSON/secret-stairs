@@ -23,6 +23,16 @@ function isSmartWalletConnector(
   return id === 'coinbaseWalletSDK' || type === 'coinbaseWallet';
 }
 
+export function mintButtonLabel(
+  location: Location,
+  isPending: boolean,
+  isConfirming: boolean,
+): string {
+  if (isPending) return 'Confirm in Wallet...';
+  if (isConfirming) return 'Minting...';
+  return `Mint ${location.passName}`;
+}
+
 interface MintButtonProps {
   onSuccess: () => void;
   location: Location;
@@ -282,18 +292,13 @@ export function MintButton({ onSuccess, location }: MintButtonProps) {
           box-glow
         "
       >
-        {isPending ? (
+        {isPending || isConfirming ? (
           <span className="flex items-center justify-center gap-2">
             <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-            Confirm in Wallet...
-          </span>
-        ) : isConfirming ? (
-          <span className="flex items-center justify-center gap-2">
-            <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-            Minting...
+            {mintButtonLabel(location, isPending, isConfirming)}
           </span>
         ) : (
-          'Mint Welcome Pass'
+          mintButtonLabel(location, isPending, isConfirming)
         )}
       </button>
 
