@@ -3,14 +3,28 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { PassphraseForm } from '../PassphraseForm';
 
 const SECRET = [
-  'apple', 'banana', 'cherry', 'date',
-  'elder', 'fig', 'grape', 'honey',
-  'ivy', 'jade', 'kiwi', 'lemon',
+  'apple',
+  'banana',
+  'cherry',
+  'date',
+  'elder',
+  'fig',
+  'grape',
+  'honey',
+  'ivy',
+  'jade',
+  'kiwi',
+  'lemon',
 ];
 
+type VerifyBody = { word: string; index: number; location?: string };
+const verifyCalls: VerifyBody[] = [];
+
 function mockVerifyApi() {
-  vi.spyOn(global, 'fetch').mockImplementation(async (input, init) => {
-    const body = JSON.parse((init?.body as string) ?? '{}');
+  verifyCalls.length = 0;
+  vi.spyOn(global, 'fetch').mockImplementation(async (_input, init) => {
+    const body = JSON.parse((init?.body as string) ?? '{}') as VerifyBody;
+    verifyCalls.push(body);
     const valid = body.word?.trim().toLowerCase() === SECRET[body.index];
     return new Response(JSON.stringify({ valid }), {
       status: 200,
@@ -182,6 +196,44 @@ describe('PassphraseForm — validation timing', () => {
       expect(input).toBeDisabled();
     } finally {
       window.matchMedia = original;
+    }
+  });
+});
+
+describe('PassphraseForm — location prop', () => {
+  beforeEach(() => {
+    mockVerifyApi();
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.useRealTimers();
+  });
+
+  it('forwards location in every verify request when set', async () => {
+    render(<PassphraseForm onVerified={() => {}} location="nyc" />);
+    const input = screen.getAllByRole('textbox')[0];
+    fireEvent.change(input, { target: { value: 'apple' } });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(700);
+    });
+    expect(verifyCalls.length).toBeGreaterThan(0);
+    for (const call of verifyCalls) {
+      expect(call.location).toBe('nyc');
+    }
+  });
+
+  it('omits location entirely when not set (legacy fallback path)', async () => {
+    render(<PassphraseForm onVerified={() => {}} />);
+    const input = screen.getAllByRole('textbox')[0];
+    fireEvent.change(input, { target: { value: 'apple' } });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(700);
+    });
+    expect(verifyCalls.length).toBeGreaterThan(0);
+    for (const call of verifyCalls) {
+      expect(call.location).toBeUndefined();
     }
   });
 });

@@ -1,30 +1,45 @@
 'use client';
 
+import { writeContract } from '@wagmi/core';
 import { useEffect, useState } from 'react';
+import { encodeFunctionData, numberToHex } from 'viem';
 import {
-  useCallsStatus,
   useAccount,
-  useReadContract,
+  useCallsStatus,
   useConnectorClient,
+  useReadContract,
   useSwitchChain,
   useWaitForTransactionReceipt,
 } from 'wagmi';
-import { writeContract } from '@wagmi/core';
 import { useConfig } from 'wagmi';
-import { encodeFunctionData, numberToHex } from 'viem';
 import { baseSepolia } from 'wagmi/chains';
 import { welcomeNftAbi } from '../constants';
-import { WELCOME_NFT_ADDRESS } from '../config';
+import type { Location } from '../lib/locations';
 
-function isSmartWalletConnector(id: string | undefined, type: string | undefined): boolean {
+function isSmartWalletConnector(
+  id: string | undefined,
+  type: string | undefined,
+): boolean {
   return id === 'coinbaseWalletSDK' || type === 'coinbaseWallet';
+}
+
+export function mintButtonLabel(
+  location: Location,
+  isPending: boolean,
+  isConfirming: boolean,
+): string {
+  if (isPending) return 'Confirm in Wallet...';
+  if (isConfirming) return 'Minting...';
+  return `Mint ${location.passName}`;
 }
 
 interface MintButtonProps {
   onSuccess: () => void;
+  location: Location;
 }
 
-export function MintButton({ onSuccess }: MintButtonProps) {
+export function MintButton({ onSuccess, location }: MintButtonProps) {
+  const contractAddress = location.contractAddress;
   const { address, chainId: connectedChainId, connector } = useAccount();
   const config = useConfig();
   const { data: connectorClient, error: clientError } = useConnectorClient({
@@ -36,7 +51,8 @@ export function MintButton({ onSuccess }: MintButtonProps) {
   const [isPending, setIsPending] = useState(false);
   const [sendError, setSendError] = useState<Error | null>(null);
 
-  const isWrongChain = connectedChainId !== undefined && connectedChainId !== baseSepolia.id;
+  const isWrongChain =
+    connectedChainId !== undefined && connectedChainId !== baseSepolia.id;
   const isSmartWallet = isSmartWalletConnector(connector?.id, connector?.type);
 
   const {
@@ -45,12 +61,12 @@ export function MintButton({ onSuccess }: MintButtonProps) {
     error: hasMintedError,
     refetch: refetchHasMinted,
   } = useReadContract({
-    address: WELCOME_NFT_ADDRESS,
+    address: contractAddress ?? undefined,
     abi: welcomeNftAbi,
     functionName: 'hasMinted',
     args: address ? [address] : undefined,
     chainId: baseSepolia.id,
-    query: { enabled: !!address },
+    query: { enabled: !!address && !!contractAddress },
   });
 
   const { data: callsStatus } = useCallsStatus({
@@ -70,11 +86,26 @@ export function MintButton({ onSuccess }: MintButtonProps) {
     }
   }, [callsStatus?.status, txReceipt?.status, onSuccess]);
 
+  if (!contractAddress) {
+    return (
+      <div className="flex flex-col items-center gap-3 animate-fade-in-up text-center w-full max-w-sm mx-auto">
+        <div className="w-full rounded-xl bg-stairs-dim border border-yellow-500/30 p-4">
+          <p className="text-white font-semibold text-sm">Coming soon</p>
+          <p className="text-gray-400 text-xs mt-1">
+            The {location.passName} contract isn&apos;t deployed yet. Check back
+            shortly.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   if (isWrongChain) {
     return (
       <div className="flex flex-col items-center gap-4 animate-fade-in-up text-center w-full max-w-sm mx-auto">
         <p className="text-yellow-400 text-sm">
-          Your wallet is on chain {connectedChainId}. Switch to Base Sepolia to mint.
+          Your wallet is on chain {connectedChainId}. Switch to Base Sepolia to
+          mint.
         </p>
         <button
           type="button"
@@ -134,11 +165,19 @@ export function MintButton({ onSuccess }: MintButtonProps) {
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0">
               <svg width="14" height="11" viewBox="0 0 14 11" fill="none">
-                <path d="M1 5L5 9L13 1" stroke="#22C55E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <path
+                  d="M1 5L5 9L13 1"
+                  stroke="#22C55E"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </svg>
             </div>
             <div>
-              <p className="text-white font-semibold text-sm">Already claimed</p>
+              <p className="text-white font-semibold text-sm">
+                Already claimed
+              </p>
               <p className="text-gray-400 text-xs font-mono break-all mt-1">
                 {address}
               </p>
@@ -150,7 +189,7 @@ export function MintButton({ onSuccess }: MintButtonProps) {
   }
 
   const handleMint = async () => {
-    if (!address) return;
+    if (!address || !contractAddress) return;
 
     setIsPending(true);
     setSendError(null);
@@ -182,7 +221,7 @@ export function MintButton({ onSuccess }: MintButtonProps) {
             from: address,
             calls: [
               {
-                to: WELCOME_NFT_ADDRESS,
+                to: contractAddress,
                 data: mintData,
                 value: '0x0',
               },
@@ -201,7 +240,7 @@ export function MintButton({ onSuccess }: MintButtonProps) {
         setTxId(typeof result === 'string' ? result : result.id);
       } else {
         const hash = await writeContract(config, {
-          address: WELCOME_NFT_ADDRESS,
+          address: contractAddress,
           abi: welcomeNftAbi,
           functionName: 'mint',
           args: [address],
@@ -227,7 +266,8 @@ export function MintButton({ onSuccess }: MintButtonProps) {
       {!isSmartWallet && (
         <div className="flex flex-col items-center gap-1.5 text-center">
           <p className="text-yellow-400/80 text-xs">
-            Heads up: this wallet pays its own gas. Connect a Smart Wallet for a sponsored mint.
+            Heads up: this wallet pays its own gas. Connect a Smart Wallet for a
+            sponsored mint.
           </p>
           <a
             href="https://portal.cdp.coinbase.com/products/faucet"
@@ -252,18 +292,13 @@ export function MintButton({ onSuccess }: MintButtonProps) {
           box-glow
         "
       >
-        {isPending ? (
+        {isPending || isConfirming ? (
           <span className="flex items-center justify-center gap-2">
             <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-            Confirm in Wallet...
-          </span>
-        ) : isConfirming ? (
-          <span className="flex items-center justify-center gap-2">
-            <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-            Minting...
+            {mintButtonLabel(location, isPending, isConfirming)}
           </span>
         ) : (
-          'Mint Welcome Pass'
+          mintButtonLabel(location, isPending, isConfirming)
         )}
       </button>
 

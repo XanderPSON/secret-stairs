@@ -14,8 +14,12 @@ export const viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'Secret Stairs | Coinbase HQ Welcome Pass',
-  description: 'Find the code, mint your pass. A gasless NFT for Coinbase office visitors.',
+  title: {
+    default: 'Secret Stairs',
+    template: '%s | Secret Stairs',
+  },
+  description:
+    'Find the code, mint your pass. A gasless NFT for office visitors.',
   openGraph: {
     title: 'Secret Stairs',
     description: 'Find the code, mint your pass.',
