@@ -3,21 +3,24 @@
 import { useEffect, useState } from 'react';
 import type { AdminChain } from '../../lib/admin/chains';
 import { truncateAddress } from '../../lib/admin/format';
-import { ChainSwitcher } from './ChainSwitcher';
+import { LocationSwitcher } from './LocationSwitcher';
 
 export function AdminHeader({
   chain,
+  contractAddress,
+  locationFilter,
   isFetching,
   dataUpdatedAt,
   onRefresh,
 }: {
   chain: AdminChain;
+  contractAddress: `0x${string}` | null;
+  locationFilter: string;
   isFetching: boolean;
-  dataUpdatedAt: number; // ms since epoch; 0 if never
+  dataUpdatedAt: number;
   onRefresh: () => void;
 }) {
   const [tick, setTick] = useState(0);
-  // Re-render every second so "Xs ago" stays accurate.
   useEffect(() => {
     const id = setInterval(() => setTick((t) => t + 1), 1000);
     return () => clearInterval(id);
@@ -38,17 +41,17 @@ export function AdminHeader({
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
-        <ChainSwitcher currentSlug={chain.slug} />
+        <LocationSwitcher currentValue={locationFilter} />
 
-        {chain.contractAddress ? (
+        {contractAddress ? (
           <a
-            href={chain.explorerAddressUrl(chain.contractAddress)}
+            href={chain.explorerAddressUrl(contractAddress)}
             target="_blank"
             rel="noreferrer"
             className="font-mono text-sm text-white/70 hover:text-white"
-            title={chain.contractAddress}
+            title={contractAddress}
           >
-            {truncateAddress(chain.contractAddress)} ↗
+            {truncateAddress(contractAddress)} ↗
           </a>
         ) : (
           <span className="font-mono text-sm text-white/40">no contract</span>
@@ -62,7 +65,6 @@ export function AdminHeader({
         >
           <span className={isFetching ? 'animate-spin' : ''}>↻</span>
           {ago === null ? 'never' : `${ago}s ago`}
-          {/* tick is read just to make the dependency explicit */}
           <span className="hidden">{tick}</span>
         </button>
       </div>

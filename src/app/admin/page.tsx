@@ -5,6 +5,7 @@ import { Suspense, useMemo } from 'react';
 import { AdminHeader } from '../../components/admin/AdminHeader';
 import { HoldersTable } from '../../components/admin/HoldersTable';
 import { HourOfDayHeatmap } from '../../components/admin/HourOfDayHeatmap';
+import { LocationBreakdown } from '../../components/admin/LocationBreakdown';
 import { MintsOverTimeChart } from '../../components/admin/MintsOverTimeChart';
 import { PassGallery } from '../../components/admin/PassGallery';
 import { RecentMintsFeed } from '../../components/admin/RecentMintsFeed';
@@ -14,25 +15,33 @@ import { WidgetCard } from '../../components/admin/WidgetCard';
 import { WidgetEmpty } from '../../components/admin/WidgetEmpty';
 import { WidgetError } from '../../components/admin/WidgetError';
 import { WidgetSkeleton } from '../../components/admin/WidgetSkeleton';
-import {
-  ADMIN_CHAINS,
-  DEFAULT_CHAIN_SLUG,
-  getChain,
-} from '../../lib/admin/chains';
 import { useBasenames } from '../../lib/admin/useBasenames';
-import { useMintEvents } from '../../lib/admin/useMintEvents';
+import {
+  chainForLocations,
+  locationsForFilter,
+  useMintEventsByLocation,
+} from '../../lib/admin/useMintEventsByLocation';
+import { type LocationSlug, isLocationSlug } from '../../lib/locations';
+
+type LocationFilter = LocationSlug | 'all';
+
+function parseFilter(raw: string | null): LocationFilter {
+  if (raw === 'all' || raw === null) return 'all';
+  return isLocationSlug(raw) ? raw : 'all';
+}
 
 function AdminPageBody() {
   const searchParams = useSearchParams();
-  const requestedSlug = searchParams.get('chain') ?? DEFAULT_CHAIN_SLUG;
-  // Unknown / malformed slugs silently fall back to the default chain rather
-  // than 404-ing — query params are user-editable and we'd rather show
-  // something useful than punish a typo.
-  const slug = ADMIN_CHAINS[requestedSlug] ? requestedSlug : DEFAULT_CHAIN_SLUG;
-  const chain = getChain(slug);
+  const filter = parseFilter(searchParams.get('location'));
+
+  const locations = useMemo(() => locationsForFilter(filter), [filter]);
+  const chain = useMemo(() => chainForLocations(locations), [locations]);
+
+  const headerContractAddress =
+    locations.length === 1 ? locations[0].contractAddress : null;
 
   const { data, isLoading, isFetching, error, refetch, dataUpdatedAt } =
-    useMintEvents(chain);
+    useMintEventsByLocation(locations);
 
   const events = data ?? [];
   const minterAddresses = useMemo(
@@ -42,21 +51,28 @@ function AdminPageBody() {
   const { data: basenamesData } = useBasenames(minterAddresses);
   const basenames = basenamesData ?? {};
 
+  const hasAnyDeployedContract = locations.some(
+    (l) => l.contractAddress !== null,
+  );
+
   return (
     <div className="space-y-6">
       <AdminHeader
         chain={chain}
+        contractAddress={headerContractAddress}
+        locationFilter={filter}
         isFetching={isFetching}
         dataUpdatedAt={dataUpdatedAt}
         onRefresh={() => refetch()}
       />
 
-      {chain.contractAddress === null ? (
+      {!hasAnyDeployedContract ? (
         <WidgetCard>
           <WidgetEmpty>
-            {chain.name} contract not deployed yet. Add the address in{' '}
+            No contracts deployed for the selected location(s) yet. Add a
+            contract address in{' '}
             <code className="rounded bg-white/10 px-1 font-mono text-xs">
-              src/lib/admin/chains.ts
+              src/lib/locations.ts
             </code>{' '}
             to enable.
           </WidgetEmpty>
@@ -72,6 +88,7 @@ function AdminPageBody() {
       ) : (
         <>
           <StatCards events={events} />
+          {filter === 'all' && <LocationBreakdown events={events} />}
           <MintsOverTimeChart events={events} />
           <div className="grid gap-6 lg:grid-cols-2">
             <HourOfDayHeatmap events={events} />
@@ -83,11 +100,7 @@ function AdminPageBody() {
               events={events}
               basenames={basenames}
             />
-            <HoldersTable
-              chain={chain}
-              events={events}
-              basenames={basenames}
-            />
+            <HoldersTable chain={chain} events={events} basenames={basenames} />
           </div>
           <PassGallery chain={chain} events={events} basenames={basenames} />
         </>
@@ -97,7 +110,6 @@ function AdminPageBody() {
 }
 
 export default function AdminPage() {
-  // useSearchParams requires a Suspense boundary in App Router.
   return (
     <Suspense fallback={null}>
       <AdminPageBody />

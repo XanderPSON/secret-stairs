@@ -1,6 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 import { type Log, parseAbiItem } from 'viem';
-import type { AdminChain } from './chains';
+import {
+  LOCATIONS,
+  LOCATION_SLUGS,
+  type Location,
+  type LocationSlug,
+} from '../locations';
+import { ADMIN_CHAINS, type AdminChain, getChain } from './chains';
 import { getPublicClient } from './publicClient';
 import type { MintEvent } from './types';
 
@@ -36,23 +42,26 @@ async function withConcurrency<T, R>(
   return results;
 }
 
-async function fetchMintEvents(chain: AdminChain): Promise<MintEvent[]> {
-  if (!chain.contractAddress) {
+async function fetchMintEventsForLocation(
+  location: Location,
+): Promise<MintEvent[]> {
+  if (!location.contractAddress) {
     return [];
   }
+  const chain = getChain(location.chainSlug);
   const client = getPublicClient(chain);
   const latest = await client.getBlockNumber();
 
-  // Build batched ranges from deployBlock to latest.
   const ranges: { from: bigint; to: bigint }[] = [];
-  for (let from = chain.deployBlock; from <= latest; from += BATCH_SIZE) {
-    const to = from + BATCH_SIZE - 1n > latest ? latest : from + BATCH_SIZE - 1n;
+  for (let from = location.deployBlock; from <= latest; from += BATCH_SIZE) {
+    const to =
+      from + BATCH_SIZE - 1n > latest ? latest : from + BATCH_SIZE - 1n;
     ranges.push({ from, to });
   }
 
   const logBatches = await withConcurrency(ranges, BATCH_CONCURRENCY, (range) =>
     client.getLogs({
-      address: chain.contractAddress as `0x${string}`,
+      address: location.contractAddress as `0x${string}`,
       event: TRANSFER_EVENT,
       args: { from: '0x0000000000000000000000000000000000000000' },
       fromBlock: range.from,
@@ -62,7 +71,6 @@ async function fetchMintEvents(chain: AdminChain): Promise<MintEvent[]> {
 
   const logs: Log[] = logBatches.flat();
 
-  // Resolve unique block timestamps.
   const uniqueBlocks = [
     ...new Set(
       logs.map((log) => {
@@ -88,9 +96,10 @@ async function fetchMintEvents(chain: AdminChain): Promise<MintEvent[]> {
     tsByBlock.set(blockNumber, Number(b.timestamp));
   }
 
-  const events: MintEvent[] = logs.map((log) => {
-    // Decoded args present because we passed `event: TRANSFER_EVENT`.
-    const args = (log as unknown as { args: { to: `0x${string}`; tokenId: bigint } }).args;
+  return logs.map((log) => {
+    const args = (
+      log as unknown as { args: { to: `0x${string}`; tokenId: bigint } }
+    ).args;
     const blockNumber = log.blockNumber;
     if (blockNumber === null) {
       throw new Error('Expected confirmed log with blockNumber');
@@ -105,10 +114,19 @@ async function fetchMintEvents(chain: AdminChain): Promise<MintEvent[]> {
       blockNumber,
       txHash,
       timestamp: tsByBlock.get(blockNumber) ?? 0,
+      location: location.slug,
     };
   });
+}
 
-  return events.sort((a, b) => {
+async function fetchMintEventsForLocations(
+  locations: readonly Location[],
+): Promise<MintEvent[]> {
+  const perLocation = await Promise.all(
+    locations.map((loc) => fetchMintEventsForLocation(loc)),
+  );
+  const flat = perLocation.flat();
+  return flat.sort((a, b) => {
     if (a.blockNumber !== b.blockNumber) {
       return a.blockNumber < b.blockNumber ? -1 : 1;
     }
@@ -116,13 +134,34 @@ async function fetchMintEvents(chain: AdminChain): Promise<MintEvent[]> {
   });
 }
 
-export function useMintEvents(chain: AdminChain) {
+export function useMintEventsByLocation(locations: readonly Location[]) {
+  const slugs = locations.map((l) => l.slug).join(',');
   return useQuery({
-    queryKey: ['admin', 'mintEvents', chain.slug],
-    queryFn: () => fetchMintEvents(chain),
-    enabled: chain.contractAddress !== null,
+    queryKey: ['admin', 'mintEventsByLocation', slugs],
+    queryFn: () => fetchMintEventsForLocations(locations),
+    enabled: locations.length > 0,
     staleTime: 30_000,
     refetchInterval: 30_000,
     refetchOnWindowFocus: true,
   });
 }
+
+// Helper: pick the AdminChain to use for explorer URLs and per-event chain
+// context when widgets receive a merged dataset. Prefers the chain of the
+// only location being viewed, otherwise falls back to the first location's
+// chain (works because all current locations share base-sepolia).
+export function chainForLocations(locations: readonly Location[]): AdminChain {
+  if (locations.length === 0) {
+    return getChain('base-sepolia');
+  }
+  return getChain(locations[0].chainSlug);
+}
+
+export function locationsForFilter(filter: LocationSlug | 'all'): Location[] {
+  if (filter === 'all') {
+    return LOCATION_SLUGS.map((s) => LOCATIONS[s]);
+  }
+  return [LOCATIONS[filter]];
+}
+
+export { ADMIN_CHAINS };

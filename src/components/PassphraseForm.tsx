@@ -1,18 +1,26 @@
 'use client';
 
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import type { LocationSlug } from '../lib/locations';
 
 interface PassphraseFormProps {
   onVerified: () => void;
+  // Omitting `location` triggers the API's legacy SECRET_OFFICE_PHRASE
+  // fallback instead of the per-location pool.
+  location?: LocationSlug;
 }
 
 const WORD_COUNT = 12;
 
-export function PassphraseForm({ onVerified }: PassphraseFormProps) {
+export function PassphraseForm({ onVerified, location }: PassphraseFormProps) {
   const [words, setWords] = useState<string[]>(Array(WORD_COUNT).fill(''));
-  const [locked, setLocked] = useState<boolean[]>(Array(WORD_COUNT).fill(false));
+  const [locked, setLocked] = useState<boolean[]>(
+    Array(WORD_COUNT).fill(false),
+  );
   const [shaking, setShaking] = useState<number | null>(null);
-  const [invalid, setInvalid] = useState<boolean[]>(Array(WORD_COUNT).fill(false));
+  const [invalid, setInvalid] = useState<boolean[]>(
+    Array(WORD_COUNT).fill(false),
+  );
   const [activeIndex, setActiveIndex] = useState(0);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const wordsRef = useRef(words);
@@ -36,188 +44,209 @@ export function PassphraseForm({ onVerified }: PassphraseFormProps) {
     };
   }, []);
 
-  const verifyWord = useCallback(async (word: string, index: number) => {
-    try {
-      const res = await fetch('/api/verify-passphrase', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ word, index }),
-      });
-      const data = await res.json();
-      return data.valid;
-    } catch {
-      return false;
-    }
-  }, []);
-
-  const lockAndAdvance = useCallback((index: number) => {
-    setInvalid((prev) => {
-      if (!prev[index]) {
-        return prev;
+  const verifyWord = useCallback(
+    async (word: string, index: number) => {
+      try {
+        const res = await fetch('/api/verify-passphrase', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ word, index, location }),
+        });
+        const data = await res.json();
+        return data.valid;
+      } catch {
+        return false;
       }
-      const next = [...prev];
-      next[index] = false;
-      return next;
-    });
-    setLocked((prev) => {
-      const next = [...prev];
-      next[index] = true;
-      return next;
-    });
+    },
+    [location],
+  );
 
-    const nextEmpty = locked.findIndex((l, i) => !l && i > index);
-    const nextIndex =
-      nextEmpty >= 0
-        ? nextEmpty
-        : locked.findIndex((l, i) => !l && i !== index);
+  const lockAndAdvance = useCallback(
+    (index: number) => {
+      setInvalid((prev) => {
+        if (!prev[index]) {
+          return prev;
+        }
+        const next = [...prev];
+        next[index] = false;
+        return next;
+      });
+      setLocked((prev) => {
+        const next = [...prev];
+        next[index] = true;
+        return next;
+      });
 
-    if (nextIndex >= 0) {
-      setActiveIndex(nextIndex);
-    }
+      const nextEmpty = locked.findIndex((l, i) => !l && i > index);
+      const nextIndex =
+        nextEmpty >= 0
+          ? nextEmpty
+          : locked.findIndex((l, i) => !l && i !== index);
 
-    const allLocked = locked.every((l, i) => l || i === index);
-    if (allLocked) {
-      setTimeout(onVerified, 600);
-    }
-  }, [locked, onVerified]);
+      if (nextIndex >= 0) {
+        setActiveIndex(nextIndex);
+      }
+
+      const allLocked = locked.every((l, i) => l || i === index);
+      if (allLocked) {
+        setTimeout(onVerified, 600);
+      }
+    },
+    [locked, onVerified],
+  );
 
   // Silent auto-check while the user is still typing: lock if correct,
   // do absolutely nothing if wrong (no shake, no clear, no red).
-  const tryAutoLock = useCallback(async (index: number) => {
-    const word = wordsRef.current[index].trim();
-    if (!word) {
-      return;
-    }
-    const valid = await verifyWord(word, index);
-    if (valid && !locked[index]) {
-      lockAndAdvance(index);
-    }
-  }, [verifyWord, locked, lockAndAdvance]);
+  const tryAutoLock = useCallback(
+    async (index: number) => {
+      const word = wordsRef.current[index].trim();
+      if (!word) {
+        return;
+      }
+      const valid = await verifyWord(word, index);
+      if (valid && !locked[index]) {
+        lockAndAdvance(index);
+      }
+    },
+    [verifyWord, locked, lockAndAdvance],
+  );
 
   // Explicit submit: user pressed Space/Enter/Tab or blurred the field. Show
   // shake + red on failure but keep the typed word intact so they can fix it.
-  const submitWord = useCallback(async (index: number) => {
-    const word = wordsRef.current[index].trim();
-    if (!word || locked[index]) {
-      return;
-    }
-    const valid = await verifyWord(word, index);
-    if (valid) {
-      lockAndAdvance(index);
-      return;
-    }
-    setInvalid((prev) => {
-      const next = [...prev];
-      next[index] = true;
-      return next;
-    });
-    setShaking(index);
-    setTimeout(() => setShaking(null), 400);
-  }, [verifyWord, locked, lockAndAdvance]);
-
-  const handleKeyDown = useCallback((e: React.KeyboardEvent, index: number) => {
-    if (e.key === ' ' || e.key === 'Enter') {
-      e.preventDefault();
-      submitWord(index);
-      return;
-    }
-
-    if (e.key === 'Backspace' && words[index] === '' && index > 0) {
-      e.preventDefault();
-      let prevUnlocked = index - 1;
-      while (prevUnlocked >= 0 && locked[prevUnlocked]) {
-        prevUnlocked--;
+  const submitWord = useCallback(
+    async (index: number) => {
+      const word = wordsRef.current[index].trim();
+      if (!word || locked[index]) {
+        return;
       }
-      if (prevUnlocked >= 0) {
-        setActiveIndex(prevUnlocked);
-      }
-    }
-    // Tab is intentionally NOT handled — let the browser move focus naturally,
-    // which fires onBlur and routes through the same submitWord path.
-  }, [words, locked, submitWord]);
-
-  const handleBlur = useCallback((index: number) => {
-    if (debounceTimers.current[index]) {
-      clearTimeout(debounceTimers.current[index]);
-      debounceTimers.current[index] = null;
-    }
-    // On touch devices, blur fires for many non-intentional reasons (scroll,
-    // suggestion bar tap, keyboard dismissal). Treat blur as a silent
-    // auto-check there \u2014 lock if correct, do nothing if wrong. On desktop,
-    // blur is an explicit "I'm done" signal so use the noisy submitWord path.
-    const isTouch =
-      typeof window !== 'undefined' &&
-      window.matchMedia('(pointer: coarse)').matches;
-    if (isTouch) {
-      tryAutoLock(index);
-    } else {
-      submitWord(index);
-    }
-  }, [submitWord, tryAutoLock]);
-
-  const handlePaste = useCallback(async (e: React.ClipboardEvent, index: number) => {
-    const pasted = e.clipboardData.getData('text').trim();
-    const pastedWords = pasted.split(/\s+/).filter(Boolean);
-
-    if (pastedWords.length <= 1) return;
-
-    e.preventDefault();
-
-    const newWords = [...words];
-    const newLocked = [...locked];
-    const newInvalid = [...invalid];
-    let slot = index;
-
-    for (const pw of pastedWords) {
-      while (slot < WORD_COUNT && newLocked[slot]) slot++;
-      if (slot >= WORD_COUNT) break;
-      newWords[slot] = pw;
-      newInvalid[slot] = false;
-      slot++;
-    }
-
-    setWords(newWords);
-    setInvalid(newInvalid);
-
-    const wrongIndices: number[] = [];
-
-    for (let i = index; i < WORD_COUNT; i++) {
-      if (newLocked[i] || !newWords[i]) {
-        continue;
-      }
-      const valid = await verifyWord(newWords[i], i);
+      const valid = await verifyWord(word, index);
       if (valid) {
-        newLocked[i] = true;
-        setLocked([...newLocked]);
-      } else {
-        wrongIndices.push(i);
+        lockAndAdvance(index);
+        return;
       }
-    }
-
-    if (wrongIndices.length > 0) {
       setInvalid((prev) => {
         const next = [...prev];
-        for (const i of wrongIndices) {
-          next[i] = true;
-        }
+        next[index] = true;
         return next;
       });
-      setShaking(wrongIndices[0]);
+      setShaking(index);
       setTimeout(() => setShaking(null), 400);
-    }
+    },
+    [verifyWord, locked, lockAndAdvance],
+  );
 
-    setLocked([...newLocked]);
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent, index: number) => {
+      if (e.key === ' ' || e.key === 'Enter') {
+        e.preventDefault();
+        submitWord(index);
+        return;
+      }
 
-    if (newLocked.every(Boolean)) {
-      setTimeout(onVerified, 600);
-      return;
-    }
+      if (e.key === 'Backspace' && words[index] === '' && index > 0) {
+        e.preventDefault();
+        let prevUnlocked = index - 1;
+        while (prevUnlocked >= 0 && locked[prevUnlocked]) {
+          prevUnlocked--;
+        }
+        if (prevUnlocked >= 0) {
+          setActiveIndex(prevUnlocked);
+        }
+      }
+      // Tab is intentionally NOT handled — let the browser move focus naturally,
+      // which fires onBlur and routes through the same submitWord path.
+    },
+    [words, locked, submitWord],
+  );
 
-    const nextEmpty = newLocked.findIndex((l) => !l);
-    if (nextEmpty >= 0) {
-      setActiveIndex(nextEmpty);
-    }
-  }, [words, locked, invalid, verifyWord, onVerified]);
+  const handleBlur = useCallback(
+    (index: number) => {
+      if (debounceTimers.current[index]) {
+        clearTimeout(debounceTimers.current[index]);
+        debounceTimers.current[index] = null;
+      }
+      // On touch devices, blur fires for many non-intentional reasons (scroll,
+      // suggestion bar tap, keyboard dismissal). Treat blur as a silent
+      // auto-check there \u2014 lock if correct, do nothing if wrong. On desktop,
+      // blur is an explicit "I'm done" signal so use the noisy submitWord path.
+      const isTouch =
+        typeof window !== 'undefined' &&
+        window.matchMedia('(pointer: coarse)').matches;
+      if (isTouch) {
+        tryAutoLock(index);
+      } else {
+        submitWord(index);
+      }
+    },
+    [submitWord, tryAutoLock],
+  );
+
+  const handlePaste = useCallback(
+    async (e: React.ClipboardEvent, index: number) => {
+      const pasted = e.clipboardData.getData('text').trim();
+      const pastedWords = pasted.split(/\s+/).filter(Boolean);
+
+      if (pastedWords.length <= 1) return;
+
+      e.preventDefault();
+
+      const newWords = [...words];
+      const newLocked = [...locked];
+      const newInvalid = [...invalid];
+      let slot = index;
+
+      for (const pw of pastedWords) {
+        while (slot < WORD_COUNT && newLocked[slot]) slot++;
+        if (slot >= WORD_COUNT) break;
+        newWords[slot] = pw;
+        newInvalid[slot] = false;
+        slot++;
+      }
+
+      setWords(newWords);
+      setInvalid(newInvalid);
+
+      const wrongIndices: number[] = [];
+
+      for (let i = index; i < WORD_COUNT; i++) {
+        if (newLocked[i] || !newWords[i]) {
+          continue;
+        }
+        const valid = await verifyWord(newWords[i], i);
+        if (valid) {
+          newLocked[i] = true;
+          setLocked([...newLocked]);
+        } else {
+          wrongIndices.push(i);
+        }
+      }
+
+      if (wrongIndices.length > 0) {
+        setInvalid((prev) => {
+          const next = [...prev];
+          for (const i of wrongIndices) {
+            next[i] = true;
+          }
+          return next;
+        });
+        setShaking(wrongIndices[0]);
+        setTimeout(() => setShaking(null), 400);
+      }
+
+      setLocked([...newLocked]);
+
+      if (newLocked.every(Boolean)) {
+        setTimeout(onVerified, 600);
+        return;
+      }
+
+      const nextEmpty = newLocked.findIndex((l) => !l);
+      if (nextEmpty >= 0) {
+        setActiveIndex(nextEmpty);
+      }
+    },
+    [words, locked, invalid, verifyWord, onVerified],
+  );
 
   const handleChange = (value: string, index: number) => {
     if (locked[index]) {
@@ -260,14 +289,18 @@ export function PassphraseForm({ onVerified }: PassphraseFormProps) {
         {lockedCount} / {WORD_COUNT} words decoded
       </p>
 
-      <div className={`grid grid-cols-4 gap-2 w-full transition-all duration-500 ${allLocked ? 'box-glow-strong rounded-xl' : ''}`}>
+      <div
+        className={`grid grid-cols-4 gap-2 w-full transition-all duration-500 ${allLocked ? 'box-glow-strong rounded-xl' : ''}`}
+      >
         {Array.from({ length: WORD_COUNT }).map((_, i) => (
           <div
             key={`word-${i}`}
             className={`relative ${shaking === i ? 'animate-shake' : ''} ${locked[i] ? 'animate-word-lock' : ''}`}
           >
             <input
-              ref={(el) => { inputRefs.current[i] = el; }}
+              ref={(el) => {
+                inputRefs.current[i] = el;
+              }}
               type="text"
               value={words[i]}
               onChange={(e) => handleChange(e.target.value, i)}
@@ -289,11 +322,12 @@ export function PassphraseForm({ onVerified }: PassphraseFormProps) {
               className={`
                 w-full h-11 rounded-lg text-center text-sm font-mono
                 transition-all duration-300 outline-none
-                ${locked[i]
-                  ? 'bg-stairs-blue/20 border-stairs-blue text-white border cursor-default'
-                  : i === activeIndex
-                    ? 'bg-stairs-dim border-stairs-blue/60 text-white border box-glow'
-                    : 'bg-stairs-dim border-gray-700/50 text-gray-400 border hover:border-gray-600'
+                ${
+                  locked[i]
+                    ? 'bg-stairs-blue/20 border-stairs-blue text-white border cursor-default'
+                    : i === activeIndex
+                      ? 'bg-stairs-dim border-stairs-blue/60 text-white border box-glow'
+                      : 'bg-stairs-dim border-gray-700/50 text-gray-400 border hover:border-gray-600'
                 }
                 ${invalid[i] || shaking === i ? 'border-red-500 bg-red-500/10' : ''}
                 placeholder:text-gray-600 placeholder:text-xs
@@ -303,7 +337,13 @@ export function PassphraseForm({ onVerified }: PassphraseFormProps) {
             {locked[i] && (
               <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-stairs-blue flex items-center justify-center">
                 <svg width="7" height="6" viewBox="0 0 7 6" fill="none">
-                  <path d="M1 3L2.5 4.5L6 1" stroke="white" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                  <path
+                    d="M1 3L2.5 4.5L6 1"
+                    stroke="white"
+                    strokeWidth="1.2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
                 </svg>
               </div>
             )}
