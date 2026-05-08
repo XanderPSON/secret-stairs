@@ -12,9 +12,9 @@ provider "pipelines" {
 }
 
 locals {
-  project_urn    = "placeholder-project-console-urn"
-  full_repo_name = "placeholder-github-domain/placeholder-org/placeholder-name"
-  pipeline_id    = "placeholder-org:placeholder-name"
+  project_urn    = "urn:cb:project-console:project:4121aa939a"
+  full_repo_name = "coinbase.ghe.com/bootcamp/secret-phrase"
+  pipeline_id    = "bootcamp:secret-phrase"
   pipeline_urn   = "urn:cb:pipeline-service:pipeline:${local.pipeline_id}"
 }
 
@@ -25,12 +25,12 @@ module "source_stack" {
 
   project_urn  = local.project_urn
   display_name = "Source"
-  stack_id = "placeholder-name-src"
+  stack_id = "secret-phrase-src"
 
   targets = [
     provider::pipelines::github_repository({
-      id             = "placeholder-name-src"
-      display_name   = "placeholder-org/placeholder-name:master"
+      id             = "secret-phrase-src"
+      display_name   = "bootcamp/secret-phrase:master"
       full_repo_name = local.full_repo_name
       branch         = "master"
     })
@@ -44,20 +44,18 @@ module "build_stack" {
 
   project_urn  = local.project_urn
   display_name = "Build"
-  stack_id = "placeholder-name-build"
+  stack_id = "secret-phrase-build"
 
   targets = [
     provider::pipelines::baldur_ecr_build({
-      id             = "placeholder-name-build"
-      display_name   = "placeholder-display-name"
+      id             = "secret-phrase-build"
+      display_name   = "Secret Phrase"
       full_repo_name = local.full_repo_name
-      build_name     = "placeholder-name"
-      source_target  = "placeholder-name-src"
+      build_name     = "secret-phrase"
+      source_target  = "secret-phrase-src"
     })
   ]
 }
-
-{{- if $.EnableDevelopmentConfiguration }}
 // --- Development Stack: Deploys to development environment ---
 module "development_stack" {
   source  = "terraform-modules.cbhq.net/terraform/pipeline-modules/stack"
@@ -66,69 +64,20 @@ module "development_stack" {
   project_urn         = local.project_urn
   master_pipeline_urn = local.pipeline_urn
   display_name        = "Development"
-  stack_id            = "placeholder-name-development"
+  stack_id            = "secret-phrase-development"
 
   targets = [
     provider::pipelines::sif_deploy({
-      id              = "placeholder-name-development"
-      display_name    = "placeholder-display-name Development"
+      id              = "secret-phrase-development"
+      display_name    = "Secret Phrase Development"
       full_repo_name  = local.full_repo_name
-      account_alias   = "placeholder-dev-aws-account"
+      account_alias   = "platforms-shared-dev"
       configuration   = "development"
       deployable_name = "development"
-      build_target    = "placeholder-name-build"
+      build_target    = "secret-phrase-build"
     })
   ]
 }
-{{- end }}
-
-{{- if $.EnableStagingConfiguration }}
-// --- Staging Stack: Deploys to staging environment ---
-module "staging_stack" {
-  source  = "terraform-modules.cbhq.net/terraform/pipeline-modules/stack"
-  version = "~> 2.0"
-
-  project_urn  = local.project_urn
-  display_name = "Staging"
-  stack_id = "placeholder-name-staging"
-
-  targets = [
-    provider::pipelines::sif_deploy({
-      id              = "placeholder-name-staging"
-      display_name    = "placeholder-display-name Staging"
-      full_repo_name  = local.full_repo_name
-      account_alias   = "placeholder-staging-aws-account"
-      configuration   = "staging"
-      deployable_name = "staging"
-      build_target    = "placeholder-name-build"
-    })
-  ]
-}
-{{- end }}
-
-{{- if $.EnableProductionConfiguration }}
-// --- Production Stack: Deploys to production ---
-module "production_stack" {
-  source  = "terraform-modules.cbhq.net/terraform/pipeline-modules/stack"
-  version = "~> 2.0"
-
-  project_urn  = local.project_urn
-  display_name = "Production"
-  stack_id = "placeholder-name-production"
-
-  targets = [
-    provider::pipelines::sif_deploy({
-      id              = "placeholder-name-production"
-      display_name    = "placeholder-display-name Production"
-      full_repo_name  = local.full_repo_name
-      account_alias   = "placeholder-prod-aws-account"
-      configuration   = "production"
-      deployable_name = "production"
-      build_target    = "placeholder-name-build"
-    })
-  ]
-}
-{{- end }}
 
 // --- Pipeline: Connects stacks with subscriptions ---
 module "pipeline" {
@@ -136,8 +85,8 @@ module "pipeline" {
   version = "~> 2.0"
 
   project_urn  = local.project_urn
-  display_name = "placeholder-display-name"
-  pipeline_id  = "placeholder-org:placeholder-name"
+  display_name = "Secret Phrase"
+  pipeline_id  = "bootcamp:secret-phrase"
 
   subscriptions = [
     {
@@ -146,34 +95,10 @@ module "pipeline" {
       to_stack           = module.build_stack.stack
       external_execution = true
     },
-    {{- if $.EnableDevelopmentConfiguration }}
     {
       automatic  = true
       from_stack = module.build_stack.stack
       to_stack   = module.development_stack.stack
     },
-    {{- end }}
-    {{- if $.EnableStagingConfiguration }}
-    {
-      automatic  = true
-      from_stack = module.build_stack.stack
-      to_stack   = module.staging_stack.stack
-    },
-    {{- end }}
-    {{- if $.EnableProductionConfiguration }}
-    {{- if $.EnableStagingConfiguration }}
-    {
-      automatic  = false
-      from_stack = module.staging_stack.stack
-      to_stack   = module.production_stack.stack
-    }
-    {{- else }}
-    {
-      automatic  = false
-      from_stack = module.build_stack.stack
-      to_stack   = module.production_stack.stack
-    }
-    {{- end }}
-    {{- end }}
   ]
 }

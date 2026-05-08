@@ -4,7 +4,7 @@ module "service" {
 
   project_name       = local.project_name
   configuration_name = var.configuration_name
-  name               = "placeholder-name"
+  name               = "secret-phrase"
 
   eks_config = {
     health_check_ports = [3001]

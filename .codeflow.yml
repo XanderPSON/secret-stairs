@@ -12,8 +12,8 @@ build:
   engines:
     - BaldurECR:
         autobuild: false
-        name: placeholder-name
-        path: ./apps/placeholder-name/Dockerfile
+        name: secret-phrase
+        path: ./apps/secret-phrase/Dockerfile
         expire_keep_tags_after_days: 90
         expire_tmp_tags_after_days: 30
         expire_all_after_days: 90

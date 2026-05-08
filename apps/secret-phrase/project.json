@@ -1,7 +1,7 @@
 {
-  "name": "placeholder-name",
+  "name": "secret-phrase",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "apps/placeholder-name",
+  "sourceRoot": "apps/secret-phrase",
   "projectType": "application",
   "targets": {
     "build": {

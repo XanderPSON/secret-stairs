@@ -12,9 +12,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@app/placeholder-name@workspace:apps/placeholder-name":
+"@app/secret-phrase@workspace:apps/secret-phrase":
   version: 0.0.0-use.local
-  resolution: "@app/placeholder-name@workspace:apps/placeholder-name"
+  resolution: "@app/secret-phrase@workspace:apps/secret-phrase"
   dependencies:
     "@cbhq/cds-common": "npm:^8.2.6"
     "@cbhq/cds-icons": "npm:^5.1.0"
@@ -13572,43 +13572,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"placeholder-name@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "placeholder-name@workspace:."
-  dependencies:
-    "@cbhq/client-analytics": "npm:^12.10.1"
-    "@cbhq/data-layer": "npm:^13.8.1"
-    "@cbhq/data-layer-nx-tasks": "npm:^6.1.0"
-    "@cbhq/eslint-plugin": "npm:^3.38.0"
-    "@cbhq/jest-preset": "npm:^0.5.0"
-    "@cbhq/mono-env": "npm:^0.3.6"
-    "@cbhq/mono-pipeline": "npm:^1.8.0"
-    "@cbhq/mono-tasks": "npm:^1.18.0"
-    "@cbhq/mono-templates": "npm:^6.1.0"
-    "@cbhq/yarn-constraints": "npm:^1.0.1"
-    "@nx/devkit": "npm:22.7.0"
-    "@nx/workspace": "npm:22.7.0"
-    "@swc/core": "npm:1.7.42"
-    "@types/jest": "npm:^30.0.0"
-    "@types/node": "npm:^24.0.0"
-    "@types/react": "npm:^19.0.0"
-    "@types/react-dom": "npm:^19.0.0"
-    "@types/webpack-env": "npm:^1.18.8"
-    "@yarnpkg/types": "npm:^4.0.1"
-    babel-plugin-formatjs: "npm:^10.5.38"
-    babel-plugin-relay: "npm:^16.2.0"
-    babel-plugin-tsconfig-paths: "npm:^1.0.3"
-    eslint: "npm:^8.57.1"
-    graphql: "npm:^16.8.1"
-    jest: "npm:^30.0.0"
-    nx: "npm:22.7.0"
-    prettier: "npm:^3.5.3"
-    react: "npm:^19.2.4"
-    react-dom: "npm:^19.2.4"
-    typescript: "npm:5.8.3"
-  languageName: unknown
-  linkType: soft
-
 "pluralize@npm:^8.0.0":
   version: 8.0.0
   resolution: "pluralize@npm:8.0.0::__archiveUrl=https%3A%2F%2Fnpm-proxy.cbhq.net%2Fpluralize%2F-%2Fpluralize-8.0.0.tgz"
@@ -14639,6 +14602,43 @@ __metadata:
   checksum: 10c0/1c8d2c480a026d7c02ab2ecbe5919133a096d6a721a3f201fa50663e4f30f6d6ba020dfddd93cb828b66b922e76b342e103edd19a62c95c8f60e9079cc403202
   languageName: node
   linkType: hard
+
+"secret-phrase@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "secret-phrase@workspace:."
+  dependencies:
+    "@cbhq/client-analytics": "npm:^12.10.1"
+    "@cbhq/data-layer": "npm:^13.8.1"
+    "@cbhq/data-layer-nx-tasks": "npm:^6.1.0"
+    "@cbhq/eslint-plugin": "npm:^3.38.0"
+    "@cbhq/jest-preset": "npm:^0.5.0"
+    "@cbhq/mono-env": "npm:^0.3.6"
+    "@cbhq/mono-pipeline": "npm:^1.8.0"
+    "@cbhq/mono-tasks": "npm:^1.18.0"
+    "@cbhq/mono-templates": "npm:^6.1.0"
+    "@cbhq/yarn-constraints": "npm:^1.0.1"
+    "@nx/devkit": "npm:22.7.0"
+    "@nx/workspace": "npm:22.7.0"
+    "@swc/core": "npm:1.7.42"
+    "@types/jest": "npm:^30.0.0"
+    "@types/node": "npm:^24.0.0"
+    "@types/react": "npm:^19.0.0"
+    "@types/react-dom": "npm:^19.0.0"
+    "@types/webpack-env": "npm:^1.18.8"
+    "@yarnpkg/types": "npm:^4.0.1"
+    babel-plugin-formatjs: "npm:^10.5.38"
+    babel-plugin-relay: "npm:^16.2.0"
+    babel-plugin-tsconfig-paths: "npm:^1.0.3"
+    eslint: "npm:^8.57.1"
+    graphql: "npm:^16.8.1"
+    jest: "npm:^30.0.0"
+    nx: "npm:22.7.0"
+    prettier: "npm:^3.5.3"
+    react: "npm:^19.2.4"
+    react-dom: "npm:^19.2.4"
+    typescript: "npm:5.8.3"
+  languageName: unknown
+  linkType: soft
 
 "semver-diff@npm:^3.1.1":
   version: 3.1.1

@@ -1,0 +1,39 @@
+version: 2
+terraform_runner:
+  build:
+    engine: native_tf
+    default:
+      providers: null
+  workspaces:
+    terraform/pipelines: {}
+    terraform/citadel: {}
+    terraform/corporate:
+      build:
+        providers:
+          configuration:
+            aws:
+              - account_alias: corporate
+    terraform/infra-shared-dev:
+      build:
+        providers:
+          configuration:
+            aws:
+              - account_alias: infra-shared-dev
+        included_files:
+          - terraform/main/locals.tf
+          - terraform/main/main.tf
+          - terraform/main/variables.tf
+      watchlist:
+        - terraform/main/
+    terraform/platforms-shared-dev:
+      build:
+        providers:
+          configuration:
+            aws:
+              - account_alias: platforms-shared-dev
+        included_files:
+          - terraform/main/locals.tf
+          - terraform/main/main.tf
+          - terraform/main/variables.tf
+      watchlist:
+        - terraform/main/

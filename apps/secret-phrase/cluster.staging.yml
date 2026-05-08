@@ -1,0 +1,2 @@
+cluster: 
+chart_path: apps/secret-phrase/chart

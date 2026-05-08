@@ -1,8 +1,8 @@
 {
-  "name": "placeholder-name",
+  "name": "secret-phrase",
   "version": "1.0.0",
   "description": "static description",
-  "repository": "git@github.cbhq.net:placeholder-org/placeholder-name.git",
+  "repository": "git@github.cbhq.net:bootcamp/secret-phrase.git",
   "private": true,
   "scripts": {
     "build": "",

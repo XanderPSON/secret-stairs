@@ -1,2 +1,0 @@
-cluster: placeholder-prod-k8s-cluster
-chart_path: apps/placeholder-name/chart

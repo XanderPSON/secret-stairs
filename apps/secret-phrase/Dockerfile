@@ -12,16 +12,16 @@ WORKDIR /repo
 # Install Depdendencies
 COPY package.json yarn.lock .yarnrc.yml ./
 COPY .yarn/ .yarn/
-COPY apps/placeholder-name/package.json ./apps/placeholder-name/
+COPY apps/secret-phrase/package.json ./apps/secret-phrase/
 RUN yarn --immutable
 
 COPY . .
 
 # Configure environment variables
-COPY apps/placeholder-name/.env.development apps/placeholder-name/.env
+COPY apps/secret-phrase/.env.development apps/secret-phrase/.env
 
 # DYNAMIC: Serve the the app with Node.js
-RUN yarn nx run placeholder-name:build
+RUN yarn nx run secret-phrase:build
 
 EXPOSE 3001
-CMD ["/bin/bash", "-c", "yarn workspace @app/placeholder-name start -p 3001"]
+CMD ["/bin/bash", "-c", "yarn workspace @app/secret-phrase start -p 3001"]

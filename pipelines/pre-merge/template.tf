@@ -42,12 +42,12 @@ variable "pr_repo" {
 }
 
 locals {
-  project_urn    = "placeholder-project-console-urn"
-  full_repo_name = "placeholder-github-domain/placeholder-org/placeholder-name"
+  project_urn    = "urn:cb:project-console:project:4121aa939a"
+  full_repo_name = "coinbase.ghe.com/bootcamp/secret-phrase"
 }
 
 data "pipelines_stack" "development" {
-  stack_urn = "urn:cb:pipeline-service:stack:placeholder-name-development"
+  stack_urn = "urn:cb:pipeline-service:stack:secret-phrase-development"
 }
 
 module "source_stack" {
@@ -55,13 +55,13 @@ module "source_stack" {
   version = "~> 2.0"
 
   project_urn  = local.project_urn
-  stack_id     = "placeholder-org-placeholder-name:src-${var.pr_number}"
+  stack_id     = "bootcamp-secret-phrase:src-${var.pr_number}"
   display_name = "Source"
 
   targets = [
     provider::pipelines::github_repository({
-      id             = "placeholder-name-src"
-      display_name   = "placeholder-org/placeholder-name:${var.pr_number}"
+      id             = "secret-phrase-src"
+      display_name   = "bootcamp/secret-phrase:${var.pr_number}"
       full_repo_name = local.full_repo_name
       branch         = var.branch
     })
@@ -73,16 +73,16 @@ module "build_stack" {
   version = "~> 2.0"
 
   project_urn  = local.project_urn
-  stack_id     = "placeholder-org-placeholder-name:build-${var.pr_number}"
+  stack_id     = "bootcamp-secret-phrase:build-${var.pr_number}"
   display_name = "Build"
 
   targets = [
     provider::pipelines::baldur_ecr_build({
-      id             = "placeholder-name-build"
-      display_name   = "placeholder-display-name"
+      id             = "secret-phrase-build"
+      display_name   = "Secret Phrase"
       full_repo_name = local.full_repo_name
-      build_name     = "placeholder-name"
-      source_target  = "placeholder-name-src"
+      build_name     = "secret-phrase"
+      source_target  = "secret-phrase-src"
       branch         = var.branch
     })
   ]
@@ -94,7 +94,7 @@ module "pr_pipeline" {
 
   project_urn  = local.project_urn
   pipeline_id  = var.pipeline_id
-  display_name = "placeholder-display-name #${var.pr_number}"
+  display_name = "Secret Phrase #${var.pr_number}"
 
   master_pipeline_urn = var.master_pipeline_urn
   pr_number           = var.pr_number

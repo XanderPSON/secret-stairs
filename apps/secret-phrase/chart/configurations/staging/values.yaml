@@ -1,5 +1,5 @@
 services:
-  placeholder-name:
+  secret-phrase:
     containers:
       nextjs:
         resources:
@@ -9,11 +9,11 @@ services:
           requests:
             cpu: 700m
             memory: 1000M
-        image: placeholder-name
+        image: secret-phrase
     scaling:
       min: 1
       max: 2
       targetcpu: 60
 mesh:
   enabled: true
-  hostname: placeholder-url-name-staging.cbhq.net
+  hostname: secret-phrase-staging.cbhq.net

@@ -1,5 +1,5 @@
 # Documentation on the structure of this file
 # https://confluence.coinbase-corp.com/display/INFRA/Heimdall+CODEOWNERS
 
-#~ {"path": "*", "teams": {"@infra/dev-platform": {"required_reviews": 1}}}
-* @infra/dev-platform
+#~ {"path": "*", "teams": {"@bootcamp/bootcamp-project": {"required_reviews": 1}}}
+* @bootcamp/bootcamp-project

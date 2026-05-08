@@ -1,0 +1,12 @@
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: secret-phrase
+spec:
+  maxReplicas: {{ index .Values "services" "secret-phrase" "scaling" "max" }}
+  minReplicas: {{ index .Values "services" "secret-phrase" "scaling" "min" }}
+  scaleTargetRef:
+    apiVersion: argoproj.io/v1alpha1
+    kind: Rollout
+    name: secret-phrase
+  targetCPUUtilizationPercentage: {{ index .Values "services" "secret-phrase" "scaling" "targetcpu" }}

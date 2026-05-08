@@ -1,21 +1,21 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Rollout
 metadata:
-  name: placeholder-name
+  name: secret-phrase
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: placeholder-org-placeholder-name
-      app.kubernetes.io/component: placeholder-name
+      app.kubernetes.io/name: bootcamp-secret-phrase
+      app.kubernetes.io/component: secret-phrase
   strategy:
     blueGreen:
-      activeService: placeholder-name
+      activeService: secret-phrase
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: placeholder-org-placeholder-name
-        app.kubernetes.io/component: placeholder-name
+        app.kubernetes.io/name: bootcamp-secret-phrase
+        app.kubernetes.io/component: secret-phrase
     spec:
       # Disable multi-arch support and pin all K8 pods to ARM. This ensures that all pods are running on the same architecture. Not doing
       # this can result in incidents as explained here: https://confluence.coinbase-corp.com/spaces/SL/pages/1733473093/Multi-Arch+Next.js+Deployment+Issues
@@ -34,7 +34,7 @@ spec:
                 values:
                 - arm64
       containers:
-        - image: {{ index .Values "services" "placeholder-name" "containers" "nextjs" "image" }}
+        - image: {{ index .Values "services" "secret-phrase" "containers" "nextjs" "image" }}
           name: nextjs
           ports:
             - containerPort: 3001
@@ -59,9 +59,9 @@ spec:
             periodSeconds: 10
           resources:
             limits:
-              cpu: {{ index .Values "services" "placeholder-name" "containers" "nextjs" "resources" "limits" "cpu" }}
-              memory: {{ index .Values "services" "placeholder-name" "containers" "nextjs" "resources" "limits" "memory" }}
+              cpu: {{ index .Values "services" "secret-phrase" "containers" "nextjs" "resources" "limits" "cpu" }}
+              memory: {{ index .Values "services" "secret-phrase" "containers" "nextjs" "resources" "limits" "memory" }}
             requests:
-              cpu: {{ index .Values "services" "placeholder-name" "containers" "nextjs" "resources" "requests" "cpu" }}
-              memory: {{ index .Values "services" "placeholder-name" "containers" "nextjs" "resources" "requests" "memory" }}
+              cpu: {{ index .Values "services" "secret-phrase" "containers" "nextjs" "resources" "requests" "cpu" }}
+              memory: {{ index .Values "services" "secret-phrase" "containers" "nextjs" "resources" "requests" "memory" }}
       restartPolicy: Always

@@ -4,7 +4,7 @@
     "jsx": "preserve",
     "emitDeclarationOnly": false,
     "noEmit": true,
-    "outDir": "../../.nx/dts/apps/placeholder-name",
+    "outDir": "../../.nx/dts/apps/secret-phrase",
     "plugins": [
       {
         "name": "next"

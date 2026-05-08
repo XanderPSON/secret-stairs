@@ -9,7 +9,7 @@ metadata:
     mesh.cbhq.net/ingress-port-mapping: "443:3001"
     {{- end }}
     {{- end }}
-  name: placeholder-name
+  name: secret-phrase
 spec:
   ports:
     - name: nextjs
@@ -17,5 +17,5 @@ spec:
       targetPort: 3001
       protocol: TCP
   selector:
-    app.kubernetes.io/name: placeholder-org-placeholder-name
-    app.kubernetes.io/component: placeholder-name
+    app.kubernetes.io/name: bootcamp-secret-phrase
+    app.kubernetes.io/component: secret-phrase

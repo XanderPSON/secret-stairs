@@ -1,4 +1,4 @@
-# placeholder-org/placeholder-name
+# bootcamp/secret-phrase
 
 This repo is a template for spinning up Nx powered repos, for both web and mobile.
 

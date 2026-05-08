@@ -1,0 +1,2 @@
+cluster: platforms-shared-dev
+chart_path: apps/secret-phrase/chart
