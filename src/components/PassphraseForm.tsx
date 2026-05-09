@@ -324,10 +324,10 @@ export function PassphraseForm({ onVerified, location }: PassphraseFormProps) {
                 transition-all duration-300 outline-none
                 ${
                   locked[i]
-                    ? 'bg-stairs-blue/20 border-stairs-blue text-white border cursor-default'
+                    ? 'bg-phrase-blue/20 border-phrase-blue text-white border cursor-default'
                     : i === activeIndex
-                      ? 'bg-stairs-dim border-stairs-blue/60 text-white border box-glow'
-                      : 'bg-stairs-dim border-gray-700/50 text-gray-400 border hover:border-gray-600'
+                      ? 'bg-phrase-dim border-phrase-blue/60 text-white border box-glow'
+                      : 'bg-phrase-dim border-gray-700/50 text-gray-400 border hover:border-gray-600'
                 }
                 ${invalid[i] || shaking === i ? 'border-red-500 bg-red-500/10' : ''}
                 placeholder:text-gray-600 placeholder:text-xs
@@ -335,7 +335,7 @@ export function PassphraseForm({ onVerified, location }: PassphraseFormProps) {
               `}
             />
             {locked[i] && (
-              <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-stairs-blue flex items-center justify-center">
+              <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-phrase-blue flex items-center justify-center">
                 <svg width="7" height="6" viewBox="0 0 7 6" fill="none">
                   <path
                     d="M1 3L2.5 4.5L6 1"

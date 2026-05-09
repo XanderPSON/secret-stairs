@@ -14,8 +14,8 @@ import {LocationPass} from "../src/LocationPass.sol";
 ///      Plus the standard PRIVATE_KEY for broadcasting.
 ///
 /// Example:
-///   LP_NAME="Secret Stairs Manhattan Hub Pass" \
-///   LP_SYMBOL="STAIRS-NYC" \
+///   LP_NAME="Secret Phrase Manhattan Hub Pass" \
+///   LP_SYMBOL="PHRASE-NYC" \
 ///   LP_LOCATION_NAME="New York City" \
 ///   LP_PASS_DISPLAY_NAME="MANHATTAN HUB PASS" \
 ///   PRIVATE_KEY=0x... \

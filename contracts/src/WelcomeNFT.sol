@@ -11,7 +11,7 @@ contract WelcomeNFT is ERC721 {
     uint256 private _nextTokenId;
     mapping(address => bool) public hasMinted;
 
-    constructor() ERC721("Secret Stairs Welcome Pass", "STAIRS") {}
+    constructor() ERC721("Secret Phrase Welcome Pass", "PHRASE") {}
 
     function mint(address to) external {
         require(!hasMinted[to], "Already minted");
@@ -31,9 +31,9 @@ contract WelcomeNFT is ERC721 {
 
         string memory json = string(
             abi.encodePacked(
-                '{"name":"Secret Stairs #',
+                '{"name":"Secret Phrase #',
                 tokenStr,
-                '","description":"Found the secret stairs at Coinbase HQ. A gasless Welcome Pass minted on Base.","image":"data:image/svg+xml;base64,',
+                '","description":"Found the secret phrase at Coinbase HQ. A gasless Welcome Pass minted on Base.","image":"data:image/svg+xml;base64,',
                 Base64.encode(bytes(svg)),
                 '","attributes":[{"trait_type":"Location","value":"Coinbase HQ"},{"trait_type":"Pass Type","value":"Welcome"},{"trait_type":"Network","value":"Base"}]}'
             )
@@ -63,14 +63,14 @@ contract WelcomeNFT is ERC721 {
                 '</defs>',
                 '<rect width="400" height="400" rx="20" fill="url(#bg)"/>',
                 '<rect x="12" y="12" width="376" height="376" rx="14" fill="none" stroke="#0052FF" stroke-width="1" opacity="0.3"/>',
-                _generateStairs(),
+                _generateArtwork(),
                 _generateText(tokenStr),
                 '</svg>'
             )
         );
     }
 
-    function _generateStairs() internal pure returns (string memory) {
+    function _generateArtwork() internal pure returns (string memory) {
         return string(
             abi.encodePacked(
                 '<rect x="60" y="280" width="60" height="40" rx="4" fill="url(#stair)" opacity="0.3"/>',
@@ -86,7 +86,7 @@ contract WelcomeNFT is ERC721 {
     function _generateText(string memory tokenStr) internal pure returns (string memory) {
         return string(
             abi.encodePacked(
-                '<text x="200" y="60" text-anchor="middle" fill="#3380FF" font-size="11" font-family="monospace" letter-spacing="4" opacity="0.7">SECRET STAIRS</text>',
+                '<text x="200" y="60" text-anchor="middle" fill="#3380FF" font-size="11" font-family="monospace" letter-spacing="4" opacity="0.7">SECRET PHRASE</text>',
                 '<text x="200" y="100" text-anchor="middle" fill="white" font-size="26" font-family="Arial, sans-serif" font-weight="bold">WELCOME PASS</text>',
                 '<circle cx="200" cy="360" r="16" fill="none" stroke="#0052FF" stroke-width="1" opacity="0.5"/>',
                 '<text x="200" y="365" text-anchor="middle" fill="#3380FF" font-size="11" font-family="monospace">#',

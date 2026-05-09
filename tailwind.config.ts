@@ -14,10 +14,10 @@ const config: Config = {
     },
     extend: {
       colors: {
-        'stairs-dark': '#050A14',
-        'stairs-blue': '#0052FF',
-        'stairs-glow': '#3380FF',
-        'stairs-dim': '#0A1628',
+        'phrase-dark': '#050A14',
+        'phrase-blue': '#0052FF',
+        'phrase-glow': '#3380FF',
+        'phrase-dim': '#0A1628',
       },
       animation: {
         'glow-pulse': 'glow-pulse 2s ease-in-out infinite',

@@ -89,7 +89,7 @@ export function MintButton({ onSuccess, location }: MintButtonProps) {
   if (!contractAddress) {
     return (
       <div className="flex flex-col items-center gap-3 animate-fade-in-up text-center w-full max-w-sm mx-auto">
-        <div className="w-full rounded-xl bg-stairs-dim border border-yellow-500/30 p-4">
+        <div className="w-full rounded-xl bg-phrase-dim border border-yellow-500/30 p-4">
           <p className="text-white font-semibold text-sm">Coming soon</p>
           <p className="text-gray-400 text-xs mt-1">
             The {location.passName} contract isn&apos;t deployed yet. Check back
@@ -117,8 +117,8 @@ export function MintButton({ onSuccess, location }: MintButtonProps) {
           disabled={isSwitchingChain}
           className="
             w-full rounded-xl px-6 py-3 font-semibold text-white
-            bg-gradient-to-r from-stairs-blue to-blue-600
-            hover:from-blue-600 hover:to-stairs-blue
+            bg-gradient-to-r from-phrase-blue to-blue-600
+            hover:from-blue-600 hover:to-phrase-blue
             transition-all duration-300
             disabled:opacity-40 disabled:cursor-not-allowed
             box-glow
@@ -133,7 +133,7 @@ export function MintButton({ onSuccess, location }: MintButtonProps) {
   if (isCheckingMinted) {
     return (
       <div className="flex items-center justify-center py-8 animate-fade-in-up">
-        <div className="w-5 h-5 border-2 border-stairs-blue border-t-transparent rounded-full animate-spin" />
+        <div className="w-5 h-5 border-2 border-phrase-blue border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -150,7 +150,7 @@ export function MintButton({ onSuccess, location }: MintButtonProps) {
         <button
           type="button"
           onClick={() => refetchHasMinted()}
-          className="text-stairs-blue text-xs underline hover:text-blue-300"
+          className="text-phrase-blue text-xs underline hover:text-blue-300"
         >
           Retry
         </button>
@@ -161,7 +161,7 @@ export function MintButton({ onSuccess, location }: MintButtonProps) {
   if (alreadyMinted) {
     return (
       <div className="flex flex-col items-center gap-3 animate-fade-in-up">
-        <div className="w-full rounded-xl bg-stairs-dim border border-green-500/30 p-4 box-glow-green">
+        <div className="w-full rounded-xl bg-phrase-dim border border-green-500/30 p-4 box-glow-green">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0">
               <svg width="14" height="11" viewBox="0 0 14 11" fill="none">
@@ -273,7 +273,7 @@ export function MintButton({ onSuccess, location }: MintButtonProps) {
             href="https://portal.cdp.coinbase.com/products/faucet"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-stairs-blue text-xs underline hover:text-blue-300"
+            className="text-phrase-blue text-xs underline hover:text-blue-300"
           >
             Need Base Sepolia ETH? Get some from the faucet →
           </a>
@@ -284,8 +284,8 @@ export function MintButton({ onSuccess, location }: MintButtonProps) {
         disabled={isPending || isConfirming}
         className="
           w-full rounded-xl px-6 py-4 font-semibold text-white
-          bg-gradient-to-r from-stairs-blue to-blue-600
-          hover:from-blue-600 hover:to-stairs-blue
+          bg-gradient-to-r from-phrase-blue to-blue-600
+          hover:from-blue-600 hover:to-phrase-blue
           transition-all duration-300
           disabled:opacity-40 disabled:cursor-not-allowed
           hover:scale-[1.02] active:scale-[0.98]

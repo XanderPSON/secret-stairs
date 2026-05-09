@@ -7,8 +7,8 @@ import {LocationPass} from "../src/LocationPass.sol";
 contract LocationPassTest is Test {
     LocationPass internal pass;
 
-    string internal constant NAME = "Secret Stairs Manhattan Hub Pass";
-    string internal constant SYMBOL = "STAIRS-NYC";
+    string internal constant NAME = "Secret Phrase Manhattan Hub Pass";
+    string internal constant SYMBOL = "PHRASE-NYC";
     string internal constant LOCATION_NAME = "New York City";
     string internal constant PASS_DISPLAY_NAME = "MANHATTAN HUB PASS";
 

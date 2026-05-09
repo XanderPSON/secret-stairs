@@ -6,7 +6,7 @@ export const config = createConfig({
   chains: [baseSepolia],
   connectors: [
     coinbaseWallet({
-      appName: 'Secret Stairs',
+      appName: 'Secret Phrase',
       preference: 'smartWalletOnly',
     }),
     injected(),

@@ -1,6 +1,6 @@
-# Deploying a new Secret Stairs location
+# Deploying a new Secret Phrase location
 
-End-to-end runbook for adding a new city to Secret Stairs (e.g. London,
+End-to-end runbook for adding a new city to Secret Phrase (e.g. London,
 Tokyo, Singapore). All steps are reversible up to the on-chain deploy.
 
 ## 1. Pick the city, design the puzzle
@@ -73,8 +73,8 @@ The deploy script reads constructor args from env vars. Run from the
 repo root:
 
 ```sh
-LP_NAME="Secret Stairs London Pass" \
-LP_SYMBOL="STAIRS-LON" \
+LP_NAME="Secret Phrase London Pass" \
+LP_SYMBOL="PHRASE-LON" \
 LP_LOCATION_NAME="London" \
 LP_PASS_DISPLAY_NAME="LONDON PASS" \
 PRIVATE_KEY=0xYOUR_DEPLOYER_KEY \
@@ -90,8 +90,8 @@ The script logs a structured summary at the end:
 
 ```
 ---LocationPass deployed---
-name:                Secret Stairs London Pass
-symbol:              STAIRS-LON
+name:                Secret Phrase London Pass
+symbol:              PHRASE-LON
 locationName:        London
 passDisplayName:     LONDON PASS
 contractAddress:     0xABCD...
@@ -138,7 +138,7 @@ npm run dev
 
 - Add the new contract address to any monitoring dashboards (e.g.
   Datadog, BaseScan watch lists).
-- Announce the URL `secret-stairs.vercel.app/<slug>` to whoever runs the
+- Announce the URL `secret-phrase.vercel.app/<slug>` to whoever runs the
   physical placement of the puzzle in that city.
 - Take a screenshot of the success screen with the acrostic reveal —
   great social-share asset.

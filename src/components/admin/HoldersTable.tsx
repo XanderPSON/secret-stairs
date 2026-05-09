@@ -58,7 +58,7 @@ export function HoldersTable({
         formatPT(h.mintedAt),
       ]),
     ];
-    downloadCsv(`secret-stairs-${chain.slug}-holders.csv`, rows);
+    downloadCsv(`secret-phrase-${chain.slug}-holders.csv`, rows);
   };
 
   return (

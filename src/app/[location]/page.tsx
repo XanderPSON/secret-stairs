@@ -22,7 +22,7 @@ export function generateMetadata({
     title: location.displayName,
     description: `Find the code in ${location.displayName} and mint your ${location.passName}. A gasless NFT for office visitors.`,
     openGraph: {
-      title: `Secret Stairs | ${location.displayName}`,
+      title: `Secret Phrase | ${location.displayName}`,
       description: `Find the code, mint your ${location.passName}.`,
     },
   };

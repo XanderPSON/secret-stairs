@@ -51,7 +51,7 @@ contract LocationPass is ERC721 {
         string memory json = string(
             abi.encodePacked(
                 '{"name":"', name(), ' #', tokenStr,
-                '","description":"Found the secret stairs at Coinbase ', _locationName,
+                '","description":"Found the secret phrase at Coinbase ', _locationName,
                 '. A gasless Welcome Pass minted on Base.","image":"data:image/svg+xml;base64,',
                 Base64.encode(bytes(svg)),
                 '","attributes":[{"trait_type":"Location","value":"', _locationName,
@@ -83,14 +83,14 @@ contract LocationPass is ERC721 {
                 '</defs>',
                 '<rect width="400" height="400" rx="20" fill="url(#bg)"/>',
                 '<rect x="12" y="12" width="376" height="376" rx="14" fill="none" stroke="#0052FF" stroke-width="1" opacity="0.3"/>',
-                _generateStairs(),
+                _generateArtwork(),
                 _generateText(tokenStr),
                 '</svg>'
             )
         );
     }
 
-    function _generateStairs() internal pure returns (string memory) {
+    function _generateArtwork() internal pure returns (string memory) {
         return string(
             abi.encodePacked(
                 '<rect x="60" y="280" width="60" height="40" rx="4" fill="url(#stair)" opacity="0.3"/>',
@@ -106,7 +106,7 @@ contract LocationPass is ERC721 {
     function _generateText(string memory tokenStr) internal view returns (string memory) {
         return string(
             abi.encodePacked(
-                '<text x="200" y="60" text-anchor="middle" fill="#3380FF" font-size="11" font-family="monospace" letter-spacing="4" opacity="0.7">SECRET STAIRS</text>',
+                '<text x="200" y="60" text-anchor="middle" fill="#3380FF" font-size="11" font-family="monospace" letter-spacing="4" opacity="0.7">SECRET PHRASE</text>',
                 '<text x="200" y="100" text-anchor="middle" fill="white" font-size="22" font-family="Arial, sans-serif" font-weight="bold">',
                 _passDisplayName,
                 '</text>',

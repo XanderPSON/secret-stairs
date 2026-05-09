@@ -4,14 +4,14 @@ export default function Page() {
       <div className="flex w-full max-w-md flex-col items-center gap-6 text-center">
         <StaircaseIcon />
         <h1 className="text-3xl font-bold text-white tracking-tight text-glow">
-          SECRET STAIRS
+          SECRET PHRASE
         </h1>
         <p className="text-gray-400 text-sm tracking-wide leading-relaxed">
-          You&apos;ve found the secret space between the stairwells.
+          You&apos;ve found the hidden corner.
           <br />
           Linger here a while.
         </p>
-        <div className="mt-2 h-px w-24 bg-stairs-blue/40" />
+        <div className="mt-2 h-px w-24 bg-phrase-blue/40" />
         <p className="text-gray-600 text-xs font-mono tracking-widest">
           something is being built here
         </p>

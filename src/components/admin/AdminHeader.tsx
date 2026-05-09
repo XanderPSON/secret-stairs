@@ -35,7 +35,7 @@ export function AdminHeader({
     <header className="flex flex-col gap-3 border-white/10 border-b pb-5 sm:flex-row sm:items-center sm:justify-between">
       <div>
         <p className="font-mono text-[#3380FF] text-xs uppercase tracking-widest">
-          Secret Stairs
+          Secret Phrase
         </p>
         <h1 className="font-bold text-white text-xl">Admin Dashboard</h1>
       </div>
