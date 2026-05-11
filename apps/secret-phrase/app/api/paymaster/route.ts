@@ -1,0 +1,34 @@
+import { NextRequest, NextResponse } from 'next/server';
+
+const PAYMASTER_URL = (
+  process.env.PAYMASTER_URL ??
+  process.env.NEXT_PUBLIC_PAYMASTER_URL ??
+  ''
+).trim();
+
+export async function POST(req: NextRequest) {
+  if (!PAYMASTER_URL) {
+    return NextResponse.json(
+      { error: 'Paymaster not configured' },
+      { status: 503 },
+    );
+  }
+
+  try {
+    const body = await req.json();
+
+    const res = await fetch(PAYMASTER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+
+    const data = await res.json();
+    return NextResponse.json(data, { status: res.status });
+  } catch {
+    return NextResponse.json(
+      { error: 'Paymaster request failed' },
+      { status: 502 },
+    );
+  }
+}
