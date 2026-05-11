@@ -11,8 +11,23 @@
 **Worktree:** `/Users/xander/src/coinbase/ewx/secret-phrase-ghe-feat-tl-25-migrate-from-personal` (branch `feat/tl-25-migrate-from-personal-repo` off `origin/master`). All work happens here.
 
 **Source-of-truth read sources (READ ONLY — never push):**
-- `/Users/xander/src/coinbase/ewx/secret-phrase` (personal repo, `main`, latest `e70d34f`, contains the Secret Phrase app code post-rename). NOTE: The handoff document called this directory `secret-stairs/` but the on-disk dir was already renamed to `secret-phrase/`. The git remote URL is still `https://github.com/XanderPSON/secret-stairs.git` — that's the personal repo's old name; do not let that confuse the read source. **Do not push to this remote.**
-- Stale git worktree at `/Users/xander/src/coinbase/ewx/secret-stairs-feat-rename-to-secret-phrase/` (mostly empty; only `.env.local.example` survives) is tracked by the personal repo's git but is NOT a useful read source — Task 0 cleans it up.
+- `/Users/xander/src/coinbase/ewx/secret-phrase-rename-readonly` (personal repo worktree on branch `feat/rename-to-secret-phrase`, HEAD `5fe9294`, message `chore: rename project from Secret Stairs to Secret Phrase`). This is **THE** read source for the migration.
+- `/Users/xander/src/coinbase/ewx/secret-phrase` (personal repo main checkout, HEAD `e70d34f`) — NOT used as a read source. It's the pre-rename state. Listed only for context.
+- Git remote of the personal repo is still `https://github.com/XanderPSON/secret-stairs.git` — that's the personal repo's old name; do not let that confuse the read source. **Do not push to this remote.**
+
+**MAJOR DISCOVERY DURING EXECUTION (recorded for the plan author / future readers):**
+
+The handoff document claimed *"the previous Secret Stairs → Secret Phrase rename PR was already merged"* and that the Secret Phrase code lives on the personal repo's `main`. **This was wrong.** Investigation showed:
+- `main` (HEAD `e70d34f`) is the multi-location PR merge — it still contains "Secret Stairs" branding throughout.
+- The rename lives ONLY on the unmerged branch `feat/rename-to-secret-phrase` (HEAD `5fe9294`, 19 files / 71 lines changed).
+- The rename author (commit `5fe9294`) had already done the right thing: renamed brand strings, Vercel URL, Tailwind tokens (`stairs-*` → `phrase-*`), wagmi appName, contract source for *future* deploys (with explicit doc that already-deployed contracts are immutable). The author's commit message even captured the same on-chain reasoning the original Task 11 was going to encode from scratch.
+- `vitest`: 90/90 pass on the rename branch.
+- 3 stale `secret-stairs` references remain (intentionally, per author's commit message: "Out of scope: Historical brainstorming/spec docs ... left as historical record"): `docs/superpowers/plans/2026-04-29-admin-dashboard.md` (lines 1215, 1647), `docs/superpowers/specs/2026-04-29-admin-dashboard-design.md` (line 6).
+
+**Net effect on this plan:**
+- Task 0 changed: stale worktree was cleaned up out-of-band during plan execution; Task 0 is now historical.
+- Tasks 3–6 source from `secret-phrase-rename-readonly`, NOT `secret-phrase`.
+- Task 11 collapses massively: rename is already done in source; we just verify zero unexpected references and handle the historical-doc question.
 
 **Linear:** TL-25 — https://linear.app/coinbase/issue/TL-25
 
@@ -112,8 +127,8 @@ Root-level changes:
 ## Risk register (read before starting)
 
 1. **`src/lib/locations.ts` is on-chain immutable state.** SF contract `0x803CcC4C17568d6213051a607D1ecFE8De1bdF35` at deployBlock `40598693n` on Base Sepolia. Any change to `LOCATIONS.sf.contractAddress` or `deployBlock` breaks the live frontend. Task 7 verifies these byte-for-byte.
-2. **Lingering "Secret Stairs" branding in source.** `wagmi.ts` (`appName: 'Secret Stairs'`), `config.ts` (`secret-stairs.vercel.app`), `app/layout.tsx` (title + OG description), `app/page.tsx` (whole page) still say Secret Stairs. The handoff said the rename was merged but content strings were missed. Task 11 sweeps these.
-3. **`.env.local` is gitignored on disk** at `/Users/xander/src/coinbase/ewx/secret-phrase/.env.local`. Do NOT read it, do NOT copy it. Only copy `.env.local.example`.
+2. **Rename status (REVISED after discovery)**: Rename is already done in the source branch `feat/rename-to-secret-phrase`. Source paths read from this branch will already have "Secret Phrase" branding everywhere except 3 historical-doc references (intentional). Task 11 verifies and handles edge cases only.
+3. **`.env.local` is gitignored on disk** at `/Users/xander/src/coinbase/ewx/secret-phrase/.env.local` (and may exist in `secret-phrase-rename-readonly/` if the user has it there too). Do NOT read it, do NOT copy it. Only copy `.env.local.example`.
 4. **Dockerfile expects `apps/secret-phrase/.env.development` to exist** (it does `COPY apps/secret-phrase/.env.development apps/secret-phrase/.env`). The template ships an empty file — keep it empty (or with Nx-only vars) so the Docker build doesn't fail.
 5. **React version mismatch**: template's app `package.json` declares `react: ^18.3.1`; root devDeps declare `react: ^19.2.4`. We keep app at 18.3.1 (Next 14.2 is on React 18). Yarn workspace resolution should handle this, but verify after install.
 6. **Foundry tooling**: `apps/secret-phrase/contracts/foundry.toml` uses local paths. Foundry is not installed in the Nx Docker image. We add `apps/secret-phrase/contracts/` to the workspace as documentation/source-of-truth only — Nx never tries to build it. The `forge` test/deploy workflow stays manual (per personal repo's existing process).
@@ -121,67 +136,42 @@ Root-level changes:
 
 ---
 
-## Task 0: Clean up stale leftover worktree from prior session
+## Task 0: Clean up stale leftover worktree + create read-source worktree (DONE OUT-OF-BAND)
 
-The personal repo's git tracks a worktree at `/Users/xander/src/coinbase/ewx/secret-stairs-feat-rename-to-secret-phrase/` that is no longer useful (the rename PR was merged into `main` and the dir was renamed `secret-stairs/` → `secret-phrase/`). The leftover dir is **fully populated** (it has `node_modules/`, `.next/`, `src/`, `contracts/`, `package-lock.json`, etc. — ~537 entries, ~1.1MB committed contents on `feat/rename-to-secret-phrase` branch HEAD `5fe9294`). Per the handoff document, it can be removed safely because (a) the branch is already merged via PR #1, (b) the working contents duplicate state already on `main` post-rename, and (c) `node_modules`/`.next` are reproducible.
+This task was completed during plan execution after the rename-status discovery (see Source-of-truth section above). For posterity:
 
-**Files:** none in the GHE repo are modified — this is housekeeping in the personal repo.
+**What happened:**
 
-- [ ] **Step 1: Confirm the leftover worktree state**
+1. The stale worktree `/Users/xander/src/coinbase/ewx/secret-stairs-feat-rename-to-secret-phrase/` had a broken `.git` pointer (it pointed at `/Users/xander/src/coinbase/ewx/secret-stairs/.git/...` which no longer exists because the personal repo dir was renamed `secret-stairs/` → `secret-phrase/` after the worktree was created).
+2. Cleanup commands (executed):
+   ```bash
+   git -C /Users/xander/src/coinbase/ewx/secret-phrase worktree repair /Users/xander/src/coinbase/ewx/secret-stairs-feat-rename-to-secret-phrase
+   git -C /Users/xander/src/coinbase/ewx/secret-phrase worktree remove --force /Users/xander/src/coinbase/ewx/secret-stairs-feat-rename-to-secret-phrase
+   ```
+3. Then a fresh read-only worktree was created for the rename branch (because main is the wrong source — see discovery note above):
+   ```bash
+   git -C /Users/xander/src/coinbase/ewx/secret-phrase worktree add /Users/xander/src/coinbase/ewx/secret-phrase-rename-readonly feat/rename-to-secret-phrase
+   ```
+4. Final state:
+   ```
+   /Users/xander/src/coinbase/ewx/secret-phrase                  e70d34f [main]
+   /Users/xander/src/coinbase/ewx/secret-phrase-rename-readonly  5fe9294 [feat/rename-to-secret-phrase]
+   ```
 
-```bash
-git -C /Users/xander/src/coinbase/ewx/secret-phrase worktree list
-```
-Expected output (two lines):
-```
-/Users/xander/src/coinbase/ewx/secret-phrase                               e70d34f [main]
-/Users/xander/src/coinbase/ewx/secret-stairs-feat-rename-to-secret-phrase  5fe9294 [feat/rename-to-secret-phrase]
-```
-
-- [ ] **Step 1b: SAFETY CHECK — verify no uncommitted work in the leftover worktree**
-
-```bash
-git -C /Users/xander/src/coinbase/ewx/secret-stairs-feat-rename-to-secret-phrase status --porcelain 2>&1 | tee /tmp/stale-worktree-status.txt
-```
-Expected: empty output (clean tree). If the file is non-empty (uncommitted changes exist), **STOP** and show the user the contents of `/tmp/stale-worktree-status.txt` before proceeding.
-
-- [ ] **Step 1c: Verify branch is fully merged into the personal repo's main**
-
-```bash
-git -C /Users/xander/src/coinbase/ewx/secret-phrase branch --merged main | grep -q 'feat/rename-to-secret-phrase' && echo "MERGED_OK" || echo "NOT_MERGED"
-```
-Expected: `MERGED_OK`. If `NOT_MERGED`, the branch has commits that haven't reached main — **STOP** and ask the user before deleting.
-
-- [ ] **Step 2: Remove the worktree**
-
-```bash
-git -C /Users/xander/src/coinbase/ewx/secret-phrase worktree remove --force /Users/xander/src/coinbase/ewx/secret-stairs-feat-rename-to-secret-phrase
-```
-
-If the on-disk dir is empty/missing already (it might be), use:
-```bash
-git -C /Users/xander/src/coinbase/ewx/secret-phrase worktree prune
-rm -rf /Users/xander/src/coinbase/ewx/secret-stairs-feat-rename-to-secret-phrase
-```
-
-- [ ] **Step 3: Optionally delete the leftover branch in the personal repo**
-
-The branch `feat/rename-to-secret-phrase` in the personal repo is already merged via PR #1. ASK USER before deleting:
-
-> "The personal repo has a leftover branch `feat/rename-to-secret-phrase` (already merged via PR #1). Delete it now or leave it for archival?"
-
-If user says delete:
-```bash
-git -C /Users/xander/src/coinbase/ewx/secret-phrase branch -D feat/rename-to-secret-phrase
-```
-
-- [ ] **Step 4: Confirm cleanup**
+- [ ] **Step 1: Confirm final state matches**
 
 ```bash
 git -C /Users/xander/src/coinbase/ewx/secret-phrase worktree list
-ls -d /Users/xander/src/coinbase/ewx/secret-stairs-feat-rename-to-secret-phrase 2>&1 || echo "OK: gone"
 ```
-Expected: only `/Users/xander/src/coinbase/ewx/secret-phrase` listed; the stale dir prints "OK: gone".
+Expected: exactly the two lines above. If different, re-run the commands in step 2/3 above.
+
+- [ ] **Step 2: Note for cleanup later**
+
+After Phase 1 PR is merged and we're confident, remind the user to remove the read-only worktree:
+```bash
+git -C /Users/xander/src/coinbase/ewx/secret-phrase worktree remove /Users/xander/src/coinbase/ewx/secret-phrase-rename-readonly
+```
+Optionally, also push the rename branch to GHE as historical reference (TBD with user).
 
 (No commit — this only changes the personal repo's local state, never pushed.)
 
@@ -285,10 +275,10 @@ git commit -m "chore(tl-25): delete template stub app/ and src/ before porting p
 Port `personal/src/app/*` → `apps/secret-phrase/app/*`, EXCEPT for `app/api/health/route.ts` which we keep from the template.
 
 **Files:**
-- Create: `apps/secret-phrase/app/layout.tsx` (from `secret-phrase/src/app/layout.tsx` in personal repo)
-- Create: `apps/secret-phrase/app/page.tsx` (from `secret-phrase/src/app/page.tsx` in personal repo)
-- Create: `apps/secret-phrase/app/global.css` (from `secret-phrase/src/app/global.css` in personal repo)
-- Create: `apps/secret-phrase/app/[location]/page.tsx` (from `secret-phrase/src/app/[location]/page.tsx` in personal repo)
+- Create: `apps/secret-phrase/app/layout.tsx` (from `secret-phrase-rename-readonly/src/app/layout.tsx`)
+- Create: `apps/secret-phrase/app/page.tsx` (from `secret-phrase-rename-readonly/src/app/page.tsx`)
+- Create: `apps/secret-phrase/app/global.css` (from `secret-phrase-rename-readonly/src/app/global.css`)
+- Create: `apps/secret-phrase/app/[location]/page.tsx` (from `secret-phrase-rename-readonly/src/app/[location]/page.tsx`)
 - Create: `apps/secret-phrase/app/[location]/LocationFlow.tsx`
 - Create: `apps/secret-phrase/app/[location]/__tests__/metadata.test.ts`
 - Create: `apps/secret-phrase/app/admin/layout.tsx`
@@ -300,7 +290,7 @@ Port `personal/src/app/*` → `apps/secret-phrase/app/*`, EXCEPT for `app/api/he
 - [ ] **Step 1: Copy the entire `src/app/` tree (excluding the personal repo's old structure that will be replaced)**
 
 ```bash
-SRC=/Users/xander/src/coinbase/ewx/secret-phrase
+SRC=/Users/xander/src/coinbase/ewx/secret-phrase-rename-readonly
 DST=/Users/xander/src/coinbase/ewx/secret-phrase-ghe-feat-tl-25-migrate-from-personal/apps/secret-phrase
 
 # Copy all of src/app, but DO NOT overwrite app/api/health/ (template-provided)
@@ -321,14 +311,16 @@ Expected: 5 lines, exports `GET` returning `{ status: 'ok' }`. If overwritten, r
 ```bash
 head -3 apps/secret-phrase/app/layout.tsx
 head -3 apps/secret-phrase/app/page.tsx
+grep -l "Secret Phrase" apps/secret-phrase/app/page.tsx && echo "BRANDING_OK"
+grep -l "Secret Stairs" apps/secret-phrase/app/page.tsx && echo "BRANDING_BUG_PORTED_FROM_WRONG_BRANCH" || echo "NO_STAIRS_OK"
 ```
-Expected: layout.tsx starts with `import type { Metadata } from 'next';`, page.tsx starts with `export default function Page() {` and contains "SECRET STAIRS" text (we'll fix the rename in Task 11).
+Expected: layout.tsx starts with `import type { Metadata } from 'next';`, page.tsx starts with `export default function Page() {`, `BRANDING_OK` printed, `NO_STAIRS_OK` printed. If `BRANDING_BUG_PORTED_FROM_WRONG_BRANCH` is printed, you accidentally sourced from `main` instead of `secret-phrase-rename-readonly` — re-check your `SRC=` and re-run.
 
 - [ ] **Step 4: Commit**
 
 ```bash
 git add apps/secret-phrase/app/
-git commit -m "feat(tl-25): port app/ routes from personal repo (still has Stairs branding, fixed in later task)"
+git commit -m "feat(tl-25): port app/ routes from personal repo's rename branch"
 ```
 
 ---
@@ -348,7 +340,7 @@ git commit -m "feat(tl-25): port app/ routes from personal repo (still has Stair
 - [ ] **Step 1: Copy each top-level file**
 
 ```bash
-SRC=/Users/xander/src/coinbase/ewx/secret-phrase
+SRC=/Users/xander/src/coinbase/ewx/secret-phrase-rename-readonly
 DST=/Users/xander/src/coinbase/ewx/secret-phrase-ghe-feat-tl-25-migrate-from-personal/apps/secret-phrase
 
 cp "$SRC/src/wagmi.ts" "$DST/wagmi.ts"
@@ -421,7 +413,7 @@ git commit -m "feat(tl-25): port lib/, components/, wagmi/config/constants/middl
 - [ ] **Step 1: `public/` — overwrite the template's stub favicon**
 
 ```bash
-SRC=/Users/xander/src/coinbase/ewx/secret-phrase
+SRC=/Users/xander/src/coinbase/ewx/secret-phrase-rename-readonly
 DST=/Users/xander/src/coinbase/ewx/secret-phrase-ghe-feat-tl-25-migrate-from-personal/apps/secret-phrase
 
 cp -R "$SRC/public/." "$DST/public/"
@@ -509,7 +501,7 @@ git commit -m "feat(tl-25): port public/, contracts/, docs/, scripts/ from perso
 - [ ] **Step 1: Copy as-is**
 
 ```bash
-SRC=/Users/xander/src/coinbase/ewx/secret-phrase
+SRC=/Users/xander/src/coinbase/ewx/secret-phrase-rename-readonly
 DST=/Users/xander/src/coinbase/ewx/secret-phrase-ghe-feat-tl-25-migrate-from-personal/apps/secret-phrase
 
 cp "$SRC/tailwind.config.ts" "$DST/tailwind.config.ts"
@@ -833,125 +825,124 @@ git commit -m "fix(tl-25): adjust vitest test import paths after src/ removal"
 
 ---
 
-## Task 11: Complete the "Secret Stairs" → "Secret Phrase" content rename
+## Task 11: Verify "Secret Stairs" → "Secret Phrase" rename completeness (mostly already done in source)
 
-**Files:**
-- Modify: `apps/secret-phrase/wagmi.ts`
-- Modify: `apps/secret-phrase/config.ts`
-- Modify: `apps/secret-phrase/app/layout.tsx`
-- Modify: `apps/secret-phrase/app/page.tsx`
-- Possibly modify: any test files asserting on the old strings
+**Status REVISED**: The original Task 11 assumed the rename was incomplete in source. It turned out the source branch `feat/rename-to-secret-phrase` already did a thorough rename. This task is now verification-only with one decision point about historical docs.
 
-- [ ] **Step 1: Find every remaining "Secret Stairs" or "secret-stairs" reference in ported source**
+**Files (mostly verification, only `docs/` may need touch):**
+- Verify: all of `apps/secret-phrase/` for unexpected `Secret Stairs` / `secret-stairs` / `stairs-*` (Tailwind class) references
+- Possibly modify: `apps/secret-phrase/docs/superpowers/plans/*.md` and `apps/secret-phrase/docs/superpowers/specs/*.md` (3 references the rename author intentionally left)
+
+- [ ] **Step 1: Comprehensive scan for any remaining "Secret Stairs" / `stairs-*` / `STAIRS` references in ported source**
 
 ```bash
 cd /Users/xander/src/coinbase/ewx/secret-phrase-ghe-feat-tl-25-migrate-from-personal/apps/secret-phrase
-grep -rn -i "secret stairs\|secret-stairs\|secretstairs\|stairs-blue\|stairs-dark\|stairs-glow\|stairs-dim\|SECRET STAIRS\|STAIRS\"" --include='*.ts' --include='*.tsx' --include='*.css' --include='*.md' --include='*.json' --include='*.sol' .
-```
-Expected matches and how to handle each (verified against actual file contents):
-
-**TypeScript / React (rename verbatim):**
-- `wagmi.ts:9`: `appName: 'Secret Stairs'` → `appName: 'Secret Phrase'`
-- `config.ts:4`: `'https://secret-stairs.vercel.app'` → `'https://secret-phrase.vercel.app'`
-- `app/layout.tsx`: `title.default: 'Secret Stairs'`, `title.template: '%s | Secret Stairs'`, `openGraph.title: 'Secret Stairs'`, OG description → all to "Secret Phrase"
-- `app/page.tsx`: `<h1>SECRET STAIRS</h1>` and flavor text — see Step 3 below (asks user)
-
-**Solidity (`contracts/`) — DECISION MATRIX, not blanket rename:**
-
-The personal repo's contracts/ has 8 "Secret Stairs" references across 4 `.sol` files. Each has different on-chain consequences:
-
-- `contracts/src/WelcomeNFT.sol:14`: `ERC721("Secret Stairs Welcome Pass", "STAIRS")` — this is the **on-chain name and symbol** of the SF contract `0x803CcC...` which is **already deployed and IMMUTABLE**. Renaming the source file does NOT change the deployed contract. **DO NOT RENAME** the source either — the source file is the historical record of what's on-chain. Renaming would lie about deployed state.
-- `contracts/src/WelcomeNFT.sol:34`: `'{"name":"Secret Stairs #'` — same reasoning, this is the per-token name embedded in `tokenURI`. The deployed contract returns this string forever. Source must match. **DO NOT RENAME.**
-- `contracts/src/WelcomeNFT.sol:36`: description text in tokenURI JSON. Same reasoning. **DO NOT RENAME.**
-- `contracts/src/WelcomeNFT.sol:89`: SVG `<text>...SECRET STAIRS</text>` rendered inside per-token image. Same reasoning. **DO NOT RENAME.**
-- `contracts/src/LocationPass.sol:54`: `'","description":"Found the secret stairs at Coinbase '` — this contract has NOT been deployed yet (`LOCATIONS.nyc.contractAddress === null`). Future NYC deploy will mint with this string. **ASK USER**: keep "secret stairs" branding for continuity with SF, or rename to "secret phrase" for forward consistency? Recommended: rename to "secret phrase" since NYC will be the first contract deployed with the new brand.
-- `contracts/src/LocationPass.sol:109`: SVG `<text>...SECRET STAIRS</text>` in NYC contract image. Same reasoning as line 54 — **ASK USER**, recommend rename.
-- `contracts/script/DeployLocationPass.s.sol:17`: `LP_NAME="Secret Stairs Manhattan Hub Pass"` is a comment/example in the deploy script header. Update to `"Secret Phrase Manhattan Hub Pass"`.
-- `contracts/test/LocationPass.t.sol:10`: `string internal constant NAME = "Secret Stairs Manhattan Hub Pass";` — test fixture. Update to match whatever the user picks for `LocationPass.sol` lines 54/109.
-
-**CSS / config (do NOT rename):**
-- `tailwind.config.ts`: `'stairs-dark', 'stairs-blue', 'stairs-glow', 'stairs-dim'` — these color tokens are referenced throughout `components/` and `app/`. Renaming would force a sweep across ~50 files. **DO NOT RENAME** in this PR. Document as a follow-up nice-to-have.
-- `app/global.css`: any class names using `stairs-*` colors — leave alone, follow-up.
-- `.env.local.example`: any `secret-stairs` URL → update.
-
-**Why not nuke them all?** The on-chain contract metadata is part of the product's permanent on-chain history. The TS frontend can rebrand freely (it's just UI). Source files for already-deployed contracts must mirror what's deployed — they're a historical artifact. Source files for not-yet-deployed contracts (NYC) get the new brand. CSS class names are mass-rename territory; defer.
-
-- [ ] **Step 2: Apply targeted edits**
-
-For `wagmi.ts`:
-```bash
-sed -i.bak "s/appName: 'Secret Stairs'/appName: 'Secret Phrase'/" wagmi.ts && rm wagmi.ts.bak
+grep -rn -i "secret stairs\|secret-stairs\|secretstairs\|stairs-blue\|stairs-dark\|stairs-glow\|stairs-dim\|SECRET STAIRS\|STAIRS\"\|\"STAIRS\b" \
+  --include='*.ts' --include='*.tsx' --include='*.css' --include='*.md' --include='*.json' --include='*.sol' . 2>&1 | tee /tmp/rename-scan.txt
+wc -l /tmp/rename-scan.txt
 ```
 
-For `config.ts`:
-```bash
-sed -i.bak "s|secret-stairs.vercel.app|secret-phrase.vercel.app|" config.ts && rm config.ts.bak
+Expected (matches the rename branch's known leftover state — author intentionally left these as historical record):
+
+```
+docs/superpowers/plans/2026-04-29-admin-dashboard.md:1215:          Secret Stairs
+docs/superpowers/plans/2026-04-29-admin-dashboard.md:1647:    downloadCsv(`secret-stairs-${chain.slug}-holders.csv`, rows);
+docs/superpowers/specs/2026-04-29-admin-dashboard-design.md:6:**Project:** secret-stairs
 ```
 
-For `app/layout.tsx`:
-```bash
-sed -i.bak "s/'Secret Stairs'/'Secret Phrase'/g; s/'%s | Secret Stairs'/'%s | Secret Phrase'/" app/layout.tsx && rm app/layout.tsx.bak
+PLUS expected on-chain `STAIRS` references in `contracts/src/WelcomeNFT.sol` for the **already-deployed SF contract** (these mirror permanent on-chain state and MUST stay):
+
+```
+contracts/src/WelcomeNFT.sol:14:  constructor() ERC721("Secret Stairs Welcome Pass", "STAIRS") {}
+contracts/src/WelcomeNFT.sol:34:        '{"name":"Secret Stairs #',
+contracts/src/WelcomeNFT.sol:36:        '","description":"Found the secret stairs at Coinbase HQ. ...',
+contracts/src/WelcomeNFT.sol:89:        '<text ...>SECRET STAIRS</text>',
 ```
 
-For `contracts/script/DeployLocationPass.s.sol` (header comment, no on-chain effect):
+(Wait — actually verify whether the rename branch already updated `WelcomeNFT.sol`. The author's commit message said: *"Contract source (future deploys only; existing on-chain deploys are immutable and unaffected): ERC721 name 'Secret Phrase Welcome Pass', symbol 'PHRASE' / 'PHRASE-<city>', description, SVG label, and rename `_generateStairs()` helper -> `_generateArtwork()` (visual unchanged)."* This suggests the author RENAMED the source even for the deployed-immutable SF contract. Check actual file contents.)
+
+- [ ] **Step 1b: Verify the deployed-vs-source state of WelcomeNFT.sol**
+
 ```bash
-sed -i.bak 's/Secret Stairs Manhattan Hub Pass/Secret Phrase Manhattan Hub Pass/' contracts/script/DeployLocationPass.s.sol && rm contracts/script/DeployLocationPass.s.sol.bak
+grep -n "Secret Phrase\|Secret Stairs\|PHRASE\|STAIRS" apps/secret-phrase/contracts/src/WelcomeNFT.sol
 ```
 
-For `contracts/src/LocationPass.sol` and `contracts/test/LocationPass.t.sol` — **WAIT for user answer** in Step 2b before editing.
+Two possible outcomes:
 
-- [ ] **Step 2b: ASK USER about NYC LocationPass branding**
+**Outcome A**: The rename author renamed `WelcomeNFT.sol` source even though SF is deployed (constructor now says `"Secret Phrase Welcome Pass", "PHRASE"`). This is **a bug from a strict immutability standpoint** because the source file no longer matches what's on-chain. But the rename author may have intentionally chosen forward-consistency: "future redeploys/forks of WelcomeNFT will use the new brand; the old SF deployment has its own permanent record in tx history." If this is the case, document it in the PR description as "source diverges from deployed SF contract by design."
 
-NYC `LocationPass` contract is NOT yet deployed. Source currently says "secret stairs" (line 54) and renders "SECRET STAIRS" in SVG (line 109). Ask:
+**Outcome B**: The rename author left `WelcomeNFT.sol` alone (it still says `"Secret Stairs Welcome Pass", "STAIRS"`). This matches the original Task 11 advice. Then the only remaining `Secret Stairs` references should be the 3 historical-doc lines above + the WelcomeNFT.sol entries.
 
-> "The NYC `LocationPass` contract isn't deployed yet. Its source code currently mints tokens with description 'Found the secret stairs at Coinbase' and SVG text 'SECRET STAIRS'. Should we (a) keep 'Secret Stairs' branding for continuity with the deployed SF contract, (b) update to 'Secret Phrase' to match the new brand for the first new deploy under this name, or (c) decide later in a separate ticket?"
+Either outcome is OK; record which one is true in the PR description.
 
-If (a): leave LocationPass.sol and LocationPass.t.sol alone.
-If (b): apply:
+- [ ] **Step 1c: Confirm the count is exactly what the rename branch shipped**
+
 ```bash
-sed -i.bak 's/Found the secret stairs at Coinbase/Found the secret phrase at Coinbase/' contracts/src/LocationPass.sol && rm contracts/src/LocationPass.sol.bak
-sed -i.bak 's/>SECRET STAIRS</>SECRET PHRASE</' contracts/src/LocationPass.sol && rm contracts/src/LocationPass.sol.bak
-sed -i.bak 's/Secret Stairs Manhattan Hub Pass/Secret Phrase Manhattan Hub Pass/' contracts/test/LocationPass.t.sol && rm contracts/test/LocationPass.t.sol.bak
-```
-Then re-run `forge test` if Foundry is installed locally to confirm tests still pass with the new constant.
-
-If (c): leave alone, document as a follow-up in the PR description.
-
-- [ ] **Step 3: For `app/page.tsx`, ASK USER**
-
-The home page is currently 100% Secret Stairs flavor text + custom SVG icon. The user may want to redesign it for Secret Phrase rather than just substring-replacing. Ask:
-
-> "The home page (`apps/secret-phrase/app/page.tsx`) is still pure Secret Stairs branding (heading, SVG staircase icon, flavor text 'You've found the secret space between the stairwells'). Do you want me to (a) just rename strings literally — `SECRET STAIRS` → `SECRET PHRASE`, keep the staircase icon, (b) keep as-is for now and open a follow-up ticket, or (c) rewrite the whole page?"
-
-Apply user's choice. If (a):
-```bash
-sed -i.bak "s|SECRET STAIRS|SECRET PHRASE|" app/page.tsx && rm app/page.tsx.bak
+# The 3 historical-doc references are intentional. If the count is HIGHER, something else needs attention.
+# If LOWER, the rename author also touched docs (less likely since their commit message excluded docs).
+grep -c "secret-stairs\|Secret Stairs\|SECRET STAIRS" /tmp/rename-scan.txt
 ```
 
-- [ ] **Step 4: Update tests asserting on the old strings (bucket D from Task 10)**
+If the count exceeds expected (~3 docs + ~4 WelcomeNFT lines = ~7), STOP and inspect each unexpected match. They likely indicate a port mistake or a previously-missed string that needs human judgment.
 
-```bash
-grep -rn "Secret Stairs\|SECRET STAIRS" --include='*.test.ts' --include='*.test.tsx' .
+- [ ] **Step 2: ASK USER about the 3 historical-doc references**
+
 ```
-For each, update the assertion. Example:
-```bash
-sed -i.bak "s|Secret Stairs|Secret Phrase|g" path/to/test.tsx && rm path/to/test.tsx.bak
+Three references to "Secret Stairs" remain in historical brainstorming/spec docs:
+  - docs/superpowers/plans/2026-04-29-admin-dashboard.md:1215  ("Secret Stairs" in prose)
+  - docs/superpowers/plans/2026-04-29-admin-dashboard.md:1647  (CSV filename example: secret-stairs-${chain.slug}-holders.csv)
+  - docs/superpowers/specs/2026-04-29-admin-dashboard-design.md:6  ("**Project:** secret-stairs")
+
+The rename author intentionally left these as a historical record (per their commit message:
+"Out of scope: Historical brainstorming/spec docs in docs/superpowers/ (left as historical record).").
+
+Should we:
+  (a) Keep as-is to match the author's intent (recommended — these are historical artifacts of when the project was named Secret Stairs)
+  (b) Rename to "Secret Phrase" for cleanliness
+  (c) Add a note at the top of each doc saying "This document predates the Secret Stairs → Secret Phrase rename; some references intentionally preserved as historical record"
 ```
 
-- [ ] **Step 5: Re-run tests; expect all green now**
+If (a): no edits.
+If (b): apply targeted seds (see Step 3 if chosen).
+If (c): prepend a note block to each file (see Step 4 if chosen).
+
+- [ ] **Step 3 (if user chose (b))**: Rename in historical docs
 
 ```bash
+sed -i.bak 's/Secret Stairs/Secret Phrase/g; s/secret-stairs/secret-phrase/g' \
+  apps/secret-phrase/docs/superpowers/plans/2026-04-29-admin-dashboard.md \
+  apps/secret-phrase/docs/superpowers/specs/2026-04-29-admin-dashboard-design.md
+rm apps/secret-phrase/docs/superpowers/plans/2026-04-29-admin-dashboard.md.bak
+rm apps/secret-phrase/docs/superpowers/specs/2026-04-29-admin-dashboard-design.md.bak
+```
+
+- [ ] **Step 4 (if user chose (c))**: Prepend historical-record note to each doc
+
+```bash
+NOTE='> **Historical note:** This document predates the Secret Stairs → Secret Phrase rename (commit `5fe9294`, May 2026). Some references to "Secret Stairs" are intentionally preserved as a record of the project'"'"'s naming history.\n\n'
+for f in apps/secret-phrase/docs/superpowers/plans/2026-04-29-admin-dashboard.md \
+         apps/secret-phrase/docs/superpowers/specs/2026-04-29-admin-dashboard-design.md; do
+  printf "$NOTE$(cat $f)" > "$f.new" && mv "$f.new" "$f"
+done
+```
+
+- [ ] **Step 5: Re-run vitest to confirm tests still pass**
+
+```bash
+cd apps/secret-phrase
 yarn test
 ```
-Expected: all tests pass.
+Expected: all tests pass (90+ tests per the rename branch's own verification line). The rename branch already proved 90/90 pass; we just inherit that.
 
 - [ ] **Step 6: Commit**
 
 ```bash
 cd /Users/xander/src/coinbase/ewx/secret-phrase-ghe-feat-tl-25-migrate-from-personal
 git add apps/secret-phrase/
-git commit -m "fix(tl-25): complete Secret Stairs → Secret Phrase content rename in ported code"
+git commit -m "chore(tl-25): handle historical-doc Secret Stairs references per user choice"
 ```
+
+(Skip commit if user chose (a) "keep as-is" and no files changed.)
 
 ---
 
@@ -1103,7 +1094,7 @@ Expected: all four PASS.
 - [ ] **Step 2: Verify on-chain immutability one more time**
 
 ```bash
-diff /Users/xander/src/coinbase/ewx/secret-phrase/src/lib/locations.ts \
+diff /Users/xander/src/coinbase/ewx/secret-phrase-rename-readonly/src/lib/locations.ts \
      /Users/xander/src/coinbase/ewx/secret-phrase-ghe-feat-tl-25-migrate-from-personal/apps/secret-phrase/lib/locations.ts
 ```
 Expected: ZERO diff. The SF contract address `0x803CcC4C17568d6213051a607D1ecFE8De1bdF35` and deployBlock `40598693n` MUST be byte-identical.
