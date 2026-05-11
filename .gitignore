@@ -69,3 +69,7 @@ out/
 schema.graphql
 persisted_queries.json
 **/*.graphql.ts
+# Foundry / forge build artifacts (Secret Phrase contracts)
+apps/secret-phrase/contracts/cache/
+apps/secret-phrase/contracts/out/
+apps/secret-phrase/contracts/broadcast/
