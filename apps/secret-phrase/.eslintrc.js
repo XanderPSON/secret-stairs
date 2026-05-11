@@ -1,12 +1,6 @@
+// Secret Phrase uses Biome (biome.json) for linting and formatting.
+// This file disables the workspace-level ESLint config for this app only.
 module.exports = {
-  extends: 'next',
-  settings: {
-    next: {
-      rootDir: __dirname,
-    },
-  },
-  rules: {
-    // Does not work with `:` aliases
-    'import/extensions': 'off',
-  },
+  root: true,
+  ignorePatterns: ['**/*'],
 };
