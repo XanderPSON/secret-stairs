@@ -1,0 +1,73 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import type { AdminChain } from '../../lib/admin/chains';
+import { truncateAddress } from '../../lib/admin/format';
+import { LocationSwitcher } from './LocationSwitcher';
+
+export function AdminHeader({
+  chain,
+  contractAddress,
+  locationFilter,
+  isFetching,
+  dataUpdatedAt,
+  onRefresh,
+}: {
+  chain: AdminChain;
+  contractAddress: `0x${string}` | null;
+  locationFilter: string;
+  isFetching: boolean;
+  dataUpdatedAt: number;
+  onRefresh: () => void;
+}) {
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setTick((t) => t + 1), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  const ago =
+    dataUpdatedAt > 0
+      ? Math.max(0, Math.floor((Date.now() - dataUpdatedAt) / 1000))
+      : null;
+
+  return (
+    <header className="flex flex-col gap-3 border-white/10 border-b pb-5 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <p className="font-mono text-[#3380FF] text-xs uppercase tracking-widest">
+          Secret Phrase
+        </p>
+        <h1 className="font-bold text-white text-xl">Admin Dashboard</h1>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3">
+        <LocationSwitcher currentValue={locationFilter} />
+
+        {contractAddress ? (
+          <a
+            href={chain.explorerAddressUrl(contractAddress)}
+            target="_blank"
+            rel="noreferrer"
+            className="font-mono text-sm text-white/70 hover:text-white"
+            title={contractAddress}
+          >
+            {truncateAddress(contractAddress)} ↗
+          </a>
+        ) : (
+          <span className="font-mono text-sm text-white/40">no contract</span>
+        )}
+
+        <button
+          type="button"
+          onClick={onRefresh}
+          disabled={isFetching}
+          className="flex items-center gap-2 rounded border border-white/20 bg-white/5 px-3 py-1.5 text-sm text-white hover:bg-white/10 disabled:opacity-50"
+        >
+          <span className={isFetching ? 'animate-spin' : ''}>↻</span>
+          {ago === null ? 'never' : `${ago}s ago`}
+          <span className="hidden">{tick}</span>
+        </button>
+      </div>
+    </header>
+  );
+}
