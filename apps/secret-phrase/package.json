@@ -17,7 +17,6 @@
     "faucet": "node --no-warnings scripts/faucet.ts"
   },
   "dependencies": {
-    "@cbhq/next-config": "^4.1.5",
     "@coinbase/cdp-sdk": "^1.48.2",
     "@coinbase/wallet-sdk": "^4.3.7",
     "@tanstack/react-query": "5.100.9",

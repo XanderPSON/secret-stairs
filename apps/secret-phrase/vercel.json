@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "cd ../.. && yarn install && yarn nx run secret-phrase:build",
+  "buildCommand": "cd ../.. && yarn install && yarn workspace @app/secret-phrase build",
   "outputDirectory": ".next",
   "installCommand": "echo skipping (handled by buildCommand)",
   "framework": "nextjs"

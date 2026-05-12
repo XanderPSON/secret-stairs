@@ -5,13 +5,16 @@
   "projectType": "application",
   "targets": {
     "build": {
-      "executor": "@cbhq/mono-tasks:build-next"
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "yarn workspace @app/secret-phrase build"
+      }
     },
     "start": {
-      "executor": "@cbhq/mono-tasks:start-next"
-    },
-    "extract": {
-      "executor": "@cbhq/mono-tasks:extract-messages"
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "yarn workspace @app/secret-phrase start"
+      }
     },
     "format": {
       "executor": "nx:run-commands",
@@ -30,12 +33,6 @@
       "options": {
         "command": "yarn workspace @app/secret-phrase test"
       }
-    },
-    "typecheck": {
-      "executor": "@cbhq/mono-tasks:typecheck"
-    },
-    "report-disabled-eslint-rules": {
-      "executor": "nx:noop"
     }
   }
 }
