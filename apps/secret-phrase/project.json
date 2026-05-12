@@ -14,19 +14,28 @@
       "executor": "@cbhq/mono-tasks:extract-messages"
     },
     "format": {
-      "executor": "@cbhq/mono-tasks:format"
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "yarn workspace @app/secret-phrase format"
+      }
     },
     "lint": {
-      "executor": "@cbhq/mono-tasks:lint"
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "yarn workspace @app/secret-phrase lint"
+      }
     },
     "test": {
-      "executor": "@cbhq/mono-tasks:test"
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "yarn workspace @app/secret-phrase test"
+      }
     },
     "typecheck": {
       "executor": "@cbhq/mono-tasks:typecheck"
     },
     "report-disabled-eslint-rules": {
-      "executor": "@cbhq/prevent-eslint-disable:report"
+      "executor": "nx:noop"
     }
   }
 }
