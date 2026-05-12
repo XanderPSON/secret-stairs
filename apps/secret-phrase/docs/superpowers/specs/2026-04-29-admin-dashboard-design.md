@@ -3,7 +3,7 @@
 **Date:** 2026-04-29
 **Status:** Approved (pending user review of this written spec)
 **Author:** Sisyphus
-**Project:** secret-stairs
+**Project:** secret-phrase
 
 ## Problem
 
@@ -242,7 +242,7 @@ Date math uses `Intl.DateTimeFormat('en-US', { timeZone: 'America/Los_Angeles', 
 
 ### `AdminHeader`
 
-Logo (text "STAIRS / Admin Dashboard"), chain switcher, contract address (truncated, click-to-copy + opens explorer), "Last updated Xs ago" + refresh button (spins while `isFetching`).
+Logo (text "PHRASE / Admin Dashboard"), chain switcher, contract address (truncated, click-to-copy + opens explorer), "Last updated Xs ago" + refresh button (spins while `isFetching`).
 
 ### `StatCards`
 
