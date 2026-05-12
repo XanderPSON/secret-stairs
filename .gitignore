@@ -73,3 +73,9 @@ persisted_queries.json
 apps/secret-phrase/contracts/cache/
 apps/secret-phrase/contracts/out/
 apps/secret-phrase/contracts/broadcast/
+
+# Un-ignore Secret Phrase's app-level lib/ (matches the global lib/ rule above
+# but here lib/ holds first-party application code, not Nx build output).
+# Keep contracts/lib/ ignored because that one IS forge-installed deps.
+!apps/secret-phrase/lib/
+!apps/secret-phrase/lib/**
