@@ -26,11 +26,10 @@ export function LocationFlow({ location }: { location: Location }) {
     setStep('connect');
   }, [address]);
 
-  const currentStep = !isConnected
-    ? 'connect'
-    : step === 'connect'
+  const currentStep = isConnected
+    ? step === 'connect'
       ? 'passphrase'
-      : step;
+      : step : 'connect';
 
   const handleDisconnect = () => {
     disconnect();
@@ -38,17 +37,17 @@ export function LocationFlow({ location }: { location: Location }) {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center px-4 py-12 animate-fade-in">
+    <div className='flex min-h-screen animate-fade-in flex-col items-center justify-center px-4 py-12'>
       {isConnected && address && (
-        <div className="fixed top-4 right-4 z-10 flex items-center gap-3 rounded-full bg-phrase-dim border border-gray-800 px-4 py-2 animate-fade-in">
-          <div className="w-2 h-2 rounded-full bg-phrase-blue animate-dot-pulse" />
-          <span className="font-mono text-sm text-gray-300">
+        <div className='fixed top-4 right-4 z-10 flex animate-fade-in items-center gap-3 rounded-full border border-gray-800 bg-phrase-dim px-4 py-2'>
+          <div className='h-2 w-2 animate-dot-pulse rounded-full bg-phrase-blue' />
+          <span className='font-mono text-gray-300 text-sm'>
             {address.slice(0, 6)}…{address.slice(-4)}
           </span>
           <button
             type="button"
             onClick={handleDisconnect}
-            className="text-xs text-gray-500 hover:text-gray-300 transition-colors ml-1"
+            className='ml-1 text-gray-500 text-xs transition-colors hover:text-gray-300'
           >
             Disconnect
           </button>
@@ -60,7 +59,7 @@ export function LocationFlow({ location }: { location: Location }) {
           <div className="mb-3">
             <StaircaseIcon />
           </div>
-          <h1 className="text-4xl font-bold text-white tracking-tight text-glow mb-2">
+          <h1 className='mb-2 font-bold text-4xl text-glow text-white tracking-tight'>
             SECRET PHRASE
           </h1>
           <p className="text-gray-400 text-sm tracking-wide">
@@ -100,8 +99,8 @@ export function LocationFlow({ location }: { location: Location }) {
 
 function RiddleCard({ riddle }: { riddle: string }) {
   return (
-    <div className="w-full rounded-xl border border-phrase-blue/30 bg-phrase-dim p-4 animate-fade-in-up">
-      <p className="font-mono text-[#3380FF] text-[10px] uppercase tracking-widest mb-2">
+    <div className='w-full animate-fade-in-up rounded-xl border border-phrase-blue/30 bg-phrase-dim p-4'>
+      <p className='mb-2 font-mono text-[#3380FF] text-[10px] uppercase tracking-widest'>
         Riddle
       </p>
       <p className="text-gray-300 text-sm leading-relaxed">{riddle}</p>
@@ -159,20 +158,18 @@ function StepIndicator({ current }: { current: Step }) {
   const currentIndex = steps.indexOf(current);
 
   return (
-    <div className="flex items-center gap-1 w-full max-w-xs justify-center">
+    <div className='flex w-full max-w-xs items-center justify-center gap-1'>
       {steps.map((s, i) => (
         <div key={s} className="flex items-center">
           <div
-            className={`
-              w-2.5 h-2.5 rounded-full transition-all duration-500
-              ${i < currentIndex ? 'bg-phrase-blue' : ''}
-              ${i === currentIndex ? 'bg-phrase-blue animate-dot-pulse' : ''}
+            className={`h-2.5 w-2.5 rounded-full transition-all duration-500 ${i < currentIndex ? 'bg-phrase-blue' : ''}
+              ${i === currentIndex ? 'animate-dot-pulse bg-phrase-blue' : ''}
               ${i > currentIndex ? 'bg-gray-700' : ''}
             `}
           />
           {i < steps.length - 1 && (
             <div
-              className={`w-12 h-px mx-1 transition-colors duration-500 ${
+              className={`mx-1 h-px w-12 transition-colors duration-500 ${
                 i < currentIndex ? 'bg-phrase-blue' : 'bg-gray-700'
               }`}
             />
@@ -185,15 +182,15 @@ function StepIndicator({ current }: { current: Step }) {
 
 function SuccessScreen({ location }: { location: Location }) {
   return (
-    <div className="flex flex-col items-center gap-6 text-center animate-scale-in">
+    <div className='flex animate-scale-in flex-col items-center gap-6 text-center'>
       <div className="relative">
-        <div className="w-48 h-48 rounded-2xl bg-gradient-to-br from-phrase-blue to-blue-800 p-[1px] box-glow-strong">
-          <div className="w-full h-full rounded-2xl bg-phrase-dark flex flex-col items-center justify-center gap-2">
+        <div className='box-glow-strong h-48 w-48 rounded-2xl bg-gradient-to-br from-phrase-blue to-blue-800 p-[1px]'>
+          <div className='flex h-full w-full flex-col items-center justify-center gap-2 rounded-2xl bg-phrase-dark'>
             <StaircaseIcon />
-            <p className="text-white font-bold text-sm">
+            <p className='font-bold text-sm text-white'>
               {location.passName.toUpperCase()}
             </p>
-            <p className="text-phrase-glow text-xs font-mono">
+            <p className='font-mono text-phrase-glow text-xs'>
               {location.displayName}
             </p>
           </div>
@@ -201,11 +198,11 @@ function SuccessScreen({ location }: { location: Location }) {
         <Sparkles />
       </div>
       <div>
-        <h2 className="text-2xl font-bold text-white mb-2">You&apos;re in.</h2>
+        <h2 className='mb-2 font-bold text-2xl text-white'>You&apos;re in.</h2>
         <p className="text-gray-400 text-sm">
           Your {location.passName} has been minted to your wallet.
         </p>
-        <p className="text-phrase-blue text-xs font-mono tracking-widest mt-3">
+        <p className='mt-3 font-mono text-phrase-blue text-xs tracking-widest'>
           You found <span className="text-white">{location.acrostic}</span>
         </p>
       </div>
@@ -228,7 +225,7 @@ function Sparkles() {
       {positions.map((pos) => (
         <div
           key={`sparkle-${pos.delay}`}
-          className="absolute w-1.5 h-1.5 bg-phrase-glow rounded-full animate-sparkle"
+          className='absolute h-1.5 w-1.5 animate-sparkle rounded-full bg-phrase-glow'
           style={{ ...pos, animationDelay: pos.delay }}
         />
       ))}

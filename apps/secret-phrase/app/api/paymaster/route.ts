@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 
 const PAYMASTER_URL = (
   process.env.PAYMASTER_URL ??

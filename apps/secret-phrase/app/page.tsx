@@ -1,18 +1,18 @@
 export default function Page() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center px-4 py-12 animate-fade-in">
+    <div className='flex min-h-screen animate-fade-in flex-col items-center justify-center px-4 py-12'>
       <div className="flex w-full max-w-md flex-col items-center gap-6 text-center">
         <StaircaseIcon />
-        <h1 className="text-3xl font-bold text-white tracking-tight text-glow">
+        <h1 className='font-bold text-3xl text-glow text-white tracking-tight'>
           SECRET PHRASE
         </h1>
-        <p className="text-gray-400 text-sm tracking-wide leading-relaxed">
+        <p className='text-gray-400 text-sm leading-relaxed tracking-wide'>
           You&apos;ve found the hidden corner.
           <br />
           Linger here a while.
         </p>
         <div className="mt-2 h-px w-24 bg-phrase-blue/40" />
-        <p className="text-gray-600 text-xs font-mono tracking-widest">
+        <p className='font-mono text-gray-600 text-xs tracking-widest'>
           something is being built here
         </p>
       </div>

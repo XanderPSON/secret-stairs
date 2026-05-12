@@ -28,8 +28,8 @@ export function mintButtonLabel(
   isPending: boolean,
   isConfirming: boolean,
 ): string {
-  if (isPending) return 'Confirm in Wallet...';
-  if (isConfirming) return 'Minting...';
+  if (isPending) { return 'Confirm in Wallet...'; }
+  if (isConfirming) { return 'Minting...'; }
   return `Mint ${location.passName}`;
 }
 
@@ -88,10 +88,10 @@ export function MintButton({ onSuccess, location }: MintButtonProps) {
 
   if (!contractAddress) {
     return (
-      <div className="flex flex-col items-center gap-3 animate-fade-in-up text-center w-full max-w-sm mx-auto">
-        <div className="w-full rounded-xl bg-phrase-dim border border-yellow-500/30 p-4">
-          <p className="text-white font-semibold text-sm">Coming soon</p>
-          <p className="text-gray-400 text-xs mt-1">
+      <div className='mx-auto flex w-full max-w-sm animate-fade-in-up flex-col items-center gap-3 text-center'>
+        <div className='w-full rounded-xl border border-yellow-500/30 bg-phrase-dim p-4'>
+          <p className='font-semibold text-sm text-white'>Coming soon</p>
+          <p className='mt-1 text-gray-400 text-xs'>
             The {location.passName} contract isn&apos;t deployed yet. Check back
             shortly.
           </p>
@@ -102,8 +102,8 @@ export function MintButton({ onSuccess, location }: MintButtonProps) {
 
   if (isWrongChain) {
     return (
-      <div className="flex flex-col items-center gap-4 animate-fade-in-up text-center w-full max-w-sm mx-auto">
-        <p className="text-yellow-400 text-sm">
+      <div className='mx-auto flex w-full max-w-sm animate-fade-in-up flex-col items-center gap-4 text-center'>
+        <p className='text-sm text-yellow-400'>
           Your wallet is on chain {connectedChainId}. Switch to Base Sepolia to
           mint.
         </p>
@@ -115,14 +115,7 @@ export function MintButton({ onSuccess, location }: MintButtonProps) {
             });
           }}
           disabled={isSwitchingChain}
-          className="
-            w-full rounded-xl px-6 py-3 font-semibold text-white
-            bg-gradient-to-r from-phrase-blue to-blue-600
-            hover:from-blue-600 hover:to-phrase-blue
-            transition-all duration-300
-            disabled:opacity-40 disabled:cursor-not-allowed
-            box-glow
-          "
+          className='box-glow w-full rounded-xl bg-gradient-to-r from-phrase-blue to-blue-600 px-6 py-3 font-semibold text-white transition-all duration-300 hover:from-blue-600 hover:to-phrase-blue disabled:cursor-not-allowed disabled:opacity-40 '
         >
           {isSwitchingChain ? 'Switching…' : 'Switch to Base Sepolia'}
         </button>
@@ -132,19 +125,19 @@ export function MintButton({ onSuccess, location }: MintButtonProps) {
 
   if (isCheckingMinted) {
     return (
-      <div className="flex items-center justify-center py-8 animate-fade-in-up">
-        <div className="w-5 h-5 border-2 border-phrase-blue border-t-transparent rounded-full animate-spin" />
+      <div className='flex animate-fade-in-up items-center justify-center py-8'>
+        <div className='h-5 w-5 animate-spin rounded-full border-2 border-phrase-blue border-t-transparent' />
       </div>
     );
   }
 
   if (hasMintedError) {
     return (
-      <div className="flex flex-col items-center gap-3 animate-fade-in-up text-center">
+      <div className='flex animate-fade-in-up flex-col items-center gap-3 text-center'>
         <p className="text-red-400 text-sm">
           Couldn&apos;t check mint status on Base Sepolia.
         </p>
-        <p className="text-gray-500 text-xs break-all">
+        <p className='break-all text-gray-500 text-xs'>
           {hasMintedError.message}
         </p>
         <button
@@ -160,10 +153,10 @@ export function MintButton({ onSuccess, location }: MintButtonProps) {
 
   if (alreadyMinted) {
     return (
-      <div className="flex flex-col items-center gap-3 animate-fade-in-up">
-        <div className="w-full rounded-xl bg-phrase-dim border border-green-500/30 p-4 box-glow-green">
+      <div className='flex animate-fade-in-up flex-col items-center gap-3'>
+        <div className='box-glow-green w-full rounded-xl border border-green-500/30 bg-phrase-dim p-4'>
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0">
+            <div className='flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-green-500/20'>
               <svg width="14" height="11" viewBox="0 0 14 11" fill="none">
                 <path
                   d="M1 5L5 9L13 1"
@@ -175,10 +168,10 @@ export function MintButton({ onSuccess, location }: MintButtonProps) {
               </svg>
             </div>
             <div>
-              <p className="text-white font-semibold text-sm">
+              <p className='font-semibold text-sm text-white'>
                 Already claimed
               </p>
-              <p className="text-gray-400 text-xs font-mono break-all mt-1">
+              <p className='mt-1 break-all font-mono text-gray-400 text-xs'>
                 {address}
               </p>
             </div>
@@ -189,7 +182,7 @@ export function MintButton({ onSuccess, location }: MintButtonProps) {
   }
 
   const handleMint = async () => {
-    if (!address || !contractAddress) return;
+    if (!address || !contractAddress) { return; }
 
     setIsPending(true);
     setSendError(null);
@@ -262,10 +255,10 @@ export function MintButton({ onSuccess, location }: MintButtonProps) {
     (!!txHash && txReceipt?.status !== 'success');
 
   return (
-    <div className="flex flex-col items-center gap-4 w-full max-w-sm mx-auto animate-fade-in-up">
+    <div className='mx-auto flex w-full max-w-sm animate-fade-in-up flex-col items-center gap-4'>
       {!isSmartWallet && (
         <div className="flex flex-col items-center gap-1.5 text-center">
-          <p className="text-yellow-400/80 text-xs">
+          <p className='text-xs text-yellow-400/80'>
             Heads up: this wallet pays its own gas. Connect a Smart Wallet for a
             sponsored mint.
           </p>
@@ -282,19 +275,11 @@ export function MintButton({ onSuccess, location }: MintButtonProps) {
       <button
         onClick={handleMint}
         disabled={isPending || isConfirming}
-        className="
-          w-full rounded-xl px-6 py-4 font-semibold text-white
-          bg-gradient-to-r from-phrase-blue to-blue-600
-          hover:from-blue-600 hover:to-phrase-blue
-          transition-all duration-300
-          disabled:opacity-40 disabled:cursor-not-allowed
-          hover:scale-[1.02] active:scale-[0.98]
-          box-glow
-        "
+        className='box-glow w-full rounded-xl bg-gradient-to-r from-phrase-blue to-blue-600 px-6 py-4 font-semibold text-white transition-all duration-300 hover:scale-[1.02] hover:from-blue-600 hover:to-phrase-blue active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 '
       >
         {isPending || isConfirming ? (
           <span className="flex items-center justify-center gap-2">
-            <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+            <span className='h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white' />
             {mintButtonLabel(location, isPending, isConfirming)}
           </span>
         ) : (
@@ -303,20 +288,20 @@ export function MintButton({ onSuccess, location }: MintButtonProps) {
       </button>
 
       {sendError && (
-        <div className="text-center w-full">
+        <div className='w-full text-center'>
           <p className="text-red-400 text-sm">
             {sendError.message.includes('User rejected')
               ? 'Transaction cancelled.'
               : 'Mint failed.'}
           </p>
-          <p className="text-red-400/60 text-xs mt-1 break-all">
+          <p className='mt-1 break-all text-red-400/60 text-xs'>
             {sendError.message}
           </p>
         </div>
       )}
 
       {isConfirming && (
-        <p className="text-gray-500 text-xs animate-pulse">
+        <p className='animate-pulse text-gray-500 text-xs'>
           Waiting for confirmation on Base Sepolia...
         </p>
       )}

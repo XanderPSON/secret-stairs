@@ -21,32 +21,24 @@ export function ConnectWallet() {
   if (isReconnecting) {
     return (
       <div className="flex items-center justify-center py-8">
-        <div className="w-5 h-5 border-2 border-phrase-blue border-t-transparent rounded-full animate-spin" />
+        <div className='h-5 w-5 animate-spin rounded-full border-2 border-phrase-blue border-t-transparent' />
       </div>
     );
   }
 
   if (!isConnected) {
     return (
-      <div className="flex flex-col gap-3 w-full max-w-sm mx-auto animate-fade-in-up">
+      <div className='mx-auto flex w-full max-w-sm animate-fade-in-up flex-col gap-3'>
         {connectors.map((connector) => (
           <button
             key={connector.uid}
             onClick={() => connect({ connector })}
             disabled={isConnecting}
-            className="
-              w-full rounded-xl px-6 py-3.5 font-semibold
-              bg-transparent text-phrase-blue
-              border border-phrase-blue/50
-              hover:bg-phrase-blue hover:text-white
-              transition-all duration-300
-              disabled:opacity-40 disabled:cursor-not-allowed
-              animate-glow-pulse
-            "
+            className='w-full animate-glow-pulse rounded-xl border border-phrase-blue/50 bg-transparent px-6 py-3.5 font-semibold text-phrase-blue transition-all duration-300 hover:bg-phrase-blue hover:text-white disabled:cursor-not-allowed disabled:opacity-40 '
           >
             {isConnecting ? (
               <span className="flex items-center justify-center gap-2">
-                <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                <span className='h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent' />
                 Connecting...
               </span>
             ) : (
@@ -59,14 +51,14 @@ export function ConnectWallet() {
   }
 
   return (
-    <div className="flex items-center gap-3 rounded-full bg-phrase-dim border border-gray-800 px-4 py-2 animate-fade-in">
-      <div className="w-2 h-2 rounded-full bg-phrase-blue animate-dot-pulse" />
-      <span className="font-mono text-sm text-gray-300">
+    <div className='flex animate-fade-in items-center gap-3 rounded-full border border-gray-800 bg-phrase-dim px-4 py-2'>
+      <div className='h-2 w-2 animate-dot-pulse rounded-full bg-phrase-blue' />
+      <span className='font-mono text-gray-300 text-sm'>
         {address?.slice(0, 6)}...{address?.slice(-4)}
       </span>
       <button
         onClick={() => disconnect()}
-        className="text-xs text-gray-500 hover:text-gray-300 transition-colors ml-1"
+        className='ml-1 text-gray-500 text-xs transition-colors hover:text-gray-300'
       >
         Disconnect
       </button>

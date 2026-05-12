@@ -26,7 +26,7 @@ import { type LocationSlug, isLocationSlug } from '../../lib/locations';
 type LocationFilter = LocationSlug | 'all';
 
 function parseFilter(raw: string | null): LocationFilter {
-  if (raw === 'all' || raw === null) return 'all';
+  if (raw === 'all' || raw === null) { return 'all'; }
   return isLocationSlug(raw) ? raw : 'all';
 }
 
@@ -66,18 +66,7 @@ function AdminPageBody() {
         onRefresh={() => refetch()}
       />
 
-      {!hasAnyDeployedContract ? (
-        <WidgetCard>
-          <WidgetEmpty>
-            No contracts deployed for the selected location(s) yet. Add a
-            contract address in{' '}
-            <code className="rounded bg-white/10 px-1 font-mono text-xs">
-              src/lib/locations.ts
-            </code>{' '}
-            to enable.
-          </WidgetEmpty>
-        </WidgetCard>
-      ) : isLoading ? (
+      {hasAnyDeployedContract ? isLoading ? (
         <WidgetCard title="Loading">
           <WidgetSkeleton rows={4} />
         </WidgetCard>
@@ -104,6 +93,17 @@ function AdminPageBody() {
           </div>
           <PassGallery chain={chain} events={events} basenames={basenames} />
         </>
+      ) : (
+        <WidgetCard>
+          <WidgetEmpty>
+            No contracts deployed for the selected location(s) yet. Add a
+            contract address in{' '}
+            <code className="rounded bg-white/10 px-1 font-mono text-xs">
+              src/lib/locations.ts
+            </code>{' '}
+            to enable.
+          </WidgetEmpty>
+        </WidgetCard>
       )}
     </div>
   );

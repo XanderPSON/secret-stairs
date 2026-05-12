@@ -85,7 +85,7 @@ async function main() {
     token,
   });
 
-  console.log(`Faucet transaction sent!`);
+  console.log('Faucet transaction sent!');
   console.log(`  tx hash: ${faucetResp.transactionHash}`);
   console.log(`  explorer: https://sepolia.basescan.org/tx/${faucetResp.transactionHash}`);
 }

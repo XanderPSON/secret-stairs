@@ -18,6 +18,11 @@
     "../../types/**/*",
     ".next/types/**/*.ts"
   ],
-  "exclude": [],
+  "exclude": [
+    "node_modules",
+    ".next",
+    "contracts",
+    "scripts/faucet.ts"
+  ],
   "references": []
 }

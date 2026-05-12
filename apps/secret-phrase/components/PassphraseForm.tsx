@@ -186,7 +186,7 @@ export function PassphraseForm({ onVerified, location }: PassphraseFormProps) {
       const pasted = e.clipboardData.getData('text').trim();
       const pastedWords = pasted.split(/\s+/).filter(Boolean);
 
-      if (pastedWords.length <= 1) return;
+      if (pastedWords.length <= 1) { return; }
 
       e.preventDefault();
 
@@ -196,8 +196,8 @@ export function PassphraseForm({ onVerified, location }: PassphraseFormProps) {
       let slot = index;
 
       for (const pw of pastedWords) {
-        while (slot < WORD_COUNT && newLocked[slot]) slot++;
-        if (slot >= WORD_COUNT) break;
+        while (slot < WORD_COUNT && newLocked[slot]) { slot++; }
+        if (slot >= WORD_COUNT) { break; }
         newWords[slot] = pw;
         newInvalid[slot] = false;
         slot++;
@@ -284,13 +284,13 @@ export function PassphraseForm({ onVerified, location }: PassphraseFormProps) {
   const allLocked = lockedCount === WORD_COUNT;
 
   return (
-    <div className="flex flex-col items-center gap-4 w-full max-w-sm mx-auto animate-fade-in-up">
-      <p className="text-xs text-gray-500 tracking-wide uppercase">
+    <div className='mx-auto flex w-full max-w-sm animate-fade-in-up flex-col items-center gap-4'>
+      <p className='text-gray-500 text-xs uppercase tracking-wide'>
         {lockedCount} / {WORD_COUNT} words decoded
       </p>
 
       <div
-        className={`grid grid-cols-4 gap-2 w-full transition-all duration-500 ${allLocked ? 'box-glow-strong rounded-xl' : ''}`}
+        className={`grid w-full grid-cols-4 gap-2 transition-all duration-500 ${allLocked ? 'box-glow-strong rounded-xl' : ''}`}
       >
         {Array.from({ length: WORD_COUNT }).map((_, i) => (
           <div
@@ -319,23 +319,17 @@ export function PassphraseForm({ onVerified, location }: PassphraseFormProps) {
               data-form-type="other"
               data-1p-ignore="true"
               data-lpignore="true"
-              className={`
-                w-full h-11 rounded-lg text-center text-sm font-mono
-                transition-all duration-300 outline-none
-                ${
+              className={`h-11 w-full rounded-lg text-center font-mono text-sm outline-none transition-all duration-300 ${
                   locked[i]
-                    ? 'bg-phrase-blue/20 border-phrase-blue text-white border cursor-default'
+                    ? 'cursor-default border border-phrase-blue bg-phrase-blue/20 text-white'
                     : i === activeIndex
-                      ? 'bg-phrase-dim border-phrase-blue/60 text-white border box-glow'
-                      : 'bg-phrase-dim border-gray-700/50 text-gray-400 border hover:border-gray-600'
+                      ? 'box-glow border border-phrase-blue/60 bg-phrase-dim text-white'
+                      : 'border border-gray-700/50 bg-phrase-dim text-gray-400 hover:border-gray-600'
                 }
-                ${invalid[i] || shaking === i ? 'border-red-500 bg-red-500/10' : ''}
-                placeholder:text-gray-600 placeholder:text-xs
-                disabled:cursor-default
-              `}
+                ${invalid[i] || shaking === i ? 'border-red-500 bg-red-500/10' : ''}placeholder:text-gray-600 placeholder:text-xs disabled:cursor-default `}
             />
             {locked[i] && (
-              <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-phrase-blue flex items-center justify-center">
+              <div className='-top-1 -right-1 absolute flex h-3 w-3 items-center justify-center rounded-full bg-phrase-blue'>
                 <svg width="7" height="6" viewBox="0 0 7 6" fill="none">
                   <path
                     d="M1 3L2.5 4.5L6 1"
@@ -351,7 +345,7 @@ export function PassphraseForm({ onVerified, location }: PassphraseFormProps) {
         ))}
       </div>
 
-      <p className="text-xs text-gray-600">
+      <p className='text-gray-600 text-xs'>
         Type each word to unlock, or paste all 12 at once
       </p>
     </div>

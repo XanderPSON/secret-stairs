@@ -61,6 +61,6 @@
     }
   },
   "files": {
-    "ignore": ["coverage/**", ".next/**"]
+    "ignore": ["coverage/**", ".next/**", "contracts/**", "node_modules/**"]
   }
 }
