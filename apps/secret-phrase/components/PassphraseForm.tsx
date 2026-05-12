@@ -294,6 +294,7 @@ export function PassphraseForm({ onVerified, location }: PassphraseFormProps) {
       >
         {Array.from({ length: WORD_COUNT }).map((_, i) => (
           <div
+            // biome-ignore lint/suspicious/noArrayIndexKey: WORD_COUNT slots are positional and never reorder; index IS the stable identity
             key={`word-${i}`}
             className={`relative ${shaking === i ? 'animate-shake' : ''} ${locked[i] ? 'animate-word-lock' : ''}`}
           >
@@ -330,7 +331,8 @@ export function PassphraseForm({ onVerified, location }: PassphraseFormProps) {
             />
             {locked[i] && (
               <div className='-top-1 -right-1 absolute flex h-3 w-3 items-center justify-center rounded-full bg-phrase-blue'>
-                <svg width="7" height="6" viewBox="0 0 7 6" fill="none">
+                <svg width="7" height="6" viewBox="0 0 7 6" fill="none" role="img" aria-label="Word locked">
+                  <title>Word locked</title>
                   <path
                     d="M1 3L2.5 4.5L6 1"
                     stroke="white"

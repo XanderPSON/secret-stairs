@@ -157,7 +157,8 @@ export function MintButton({ onSuccess, location }: MintButtonProps) {
         <div className='box-glow-green w-full rounded-xl border border-green-500/30 bg-phrase-dim p-4'>
           <div className="flex items-center gap-3">
             <div className='flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-green-500/20'>
-              <svg width="14" height="11" viewBox="0 0 14 11" fill="none">
+              <svg width="14" height="11" viewBox="0 0 14 11" fill="none" role="img" aria-label="Success checkmark">
+                <title>Success checkmark</title>
                 <path
                   d="M1 5L5 9L13 1"
                   stroke="#22C55E"
@@ -273,6 +274,7 @@ export function MintButton({ onSuccess, location }: MintButtonProps) {
         </div>
       )}
       <button
+        type="button"
         onClick={handleMint}
         disabled={isPending || isConfirming}
         className='box-glow w-full rounded-xl bg-gradient-to-r from-phrase-blue to-blue-600 px-6 py-4 font-semibold text-white transition-all duration-300 hover:scale-[1.02] hover:from-blue-600 hover:to-phrase-blue active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 '

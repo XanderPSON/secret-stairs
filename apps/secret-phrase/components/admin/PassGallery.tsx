@@ -26,7 +26,6 @@ function GalleryTile({
         {isLoading || !data ? (
           <span className="font-mono text-white/30 text-xs">loading…</span>
         ) : (
-          // biome-ignore lint/a11y/useAltText: tile is part of a button with token id label below
           <img
             src={data.imageDataUri}
             alt={data.name}

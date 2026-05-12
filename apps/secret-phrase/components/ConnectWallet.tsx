@@ -31,6 +31,7 @@ export function ConnectWallet() {
       <div className='mx-auto flex w-full max-w-sm animate-fade-in-up flex-col gap-3'>
         {connectors.map((connector) => (
           <button
+            type="button"
             key={connector.uid}
             onClick={() => connect({ connector })}
             disabled={isConnecting}
@@ -57,6 +58,7 @@ export function ConnectWallet() {
         {address?.slice(0, 6)}...{address?.slice(-4)}
       </span>
       <button
+        type="button"
         onClick={() => disconnect()}
         className='ml-1 text-gray-500 text-xs transition-colors hover:text-gray-300'
       >
