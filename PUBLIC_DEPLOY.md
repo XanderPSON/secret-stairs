@@ -29,9 +29,10 @@ build-time tooling — so the diff is small and stable.
 | `apps/secret-phrase/package.json` | Removed `@cbhq/next-config` dependency |
 | `apps/secret-phrase/next.config.js` | Replaced `extendBaseConfig({...})` wrapper with a plain Next.js config object |
 | `apps/secret-phrase/project.json` | Replaced `@cbhq/mono-tasks:*` executors with plain `nx:run-commands` shells (Vercel doesn't use this, but keeps `nx run` working locally if needed) |
-| `apps/secret-phrase/vercel.json` | `buildCommand` runs `yarn workspace @app/secret-phrase build` directly instead of going through `yarn nx run secret-phrase:build` |
+| `apps/secret-phrase/vercel.json` | `installCommand` and `buildCommand` are split (install first, then build) so Vercel's framework version detector can find `next` in `node_modules` between the two steps. Both `cd ../..` to operate from the workspace root. |
 | `yarn.config.cjs` | Replaced `@cbhq/yarn-constraints` constraints with a no-op |
 | `yarn.lock` | Regenerated against the public npm registry |
+| `.github/workflows/nx-build-tools.yml` | **Deleted.** References `infra/cb-workflow-nx-build-tools` and `infra/cb-workflow-result-summary`, which only exist on Coinbase's GHE. On github.com the workflow fails immediately with "workflow file issue" because the referenced repos can't be resolved. |
 
 ## How to sync changes from `master`
 
